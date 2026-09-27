@@ -38,4 +38,29 @@
   ::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
   }
+
+  /* Smooth transitions for modals */
+  .modal-enter {
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  /* Table row hover animation */
+  tbody tr {
+    transition: background-color 0.15s ease;
+  }
+
+  /* Image loading placeholder */
+  img {
+    background-color: #f3f4f6;
+  }
+
+  /* Prevent text selection on interactive elements */
+  button, [role="button"] {
+    user-select: none;
+  }
 }

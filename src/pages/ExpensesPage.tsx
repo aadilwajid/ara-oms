@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Expense } from '../types';
-import { Plus, Search, Trash2, X, TrendingDown } from 'lucide-react';
+import { Plus, Search, Trash2, X } from 'lucide-react';
 
 interface Props { expenses: Expense[]; setExpenses: React.Dispatch<React.SetStateAction<Expense[]>>; }
 

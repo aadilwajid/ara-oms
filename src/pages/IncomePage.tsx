@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Income } from '../types';
-import { Plus, Search, Trash2, X, TrendingUp } from 'lucide-react';
+import { Plus, Search, Trash2, X } from 'lucide-react';
 
 interface Props { income: Income[]; setIncome: React.Dispatch<React.SetStateAction<Income[]>>; }
 

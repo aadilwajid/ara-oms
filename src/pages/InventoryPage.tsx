@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Product, BusinessSettings } from '../types';
-import { Search, AlertTriangle, Package, ArrowUpDown, Filter } from 'lucide-react';
+import { Search, AlertTriangle, Package } from 'lucide-react';
 
 interface Props { products: Product[]; setProducts: React.Dispatch<React.SetStateAction<Product[]>>; settings: BusinessSettings; }
 
@@ -78,6 +78,7 @@ export default function InventoryPage({ products, setProducts, settings }: Props
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b">
               <tr>
+                <th className="text-left px-4 py-3 font-medium text-gray-600 w-14">Image</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Product</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">SKU</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Category</th>
@@ -92,6 +93,15 @@ export default function InventoryPage({ products, setProducts, settings }: Props
             <tbody className="divide-y">
               {filtered.map(p => (
                 <tr key={p.id} className={`hover:bg-gray-50 ${p.stock === 0 ? 'bg-red-50' : p.stock <= p.lowStockThreshold ? 'bg-amber-50' : ''}`}>
+                  <td className="px-4 py-2">
+                    <div className="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden flex items-center justify-center border">
+                      {p.image ? (
+                        <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <Package className="w-5 h-5 text-gray-300" />
+                      )}
+                    </div>
+                  </td>
                   <td className="px-4 py-3 font-medium">{p.name}</td>
                   <td className="px-4 py-3 text-gray-500">{p.sku}</td>
                   <td className="px-4 py-3"><span className="px-2 py-0.5 bg-gray-100 rounded text-xs">{p.category}</span></td>

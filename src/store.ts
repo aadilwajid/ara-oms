@@ -1,26 +1,29 @@
-import { Product, Customer, Order, Invoice, Expense, Income, BusinessSettings } from './types';
-
-const STORAGE_KEYS = {
-  products: 'oms_products',
-  customers: 'oms_customers',
-  orders: 'oms_orders',
-  invoices: 'oms_invoices',
-  expenses: 'oms_expenses',
-  income: 'oms_income',
-  settings: 'oms_settings',
-};
+import { Product, Customer, Order, Invoice, Expense, Income, BusinessSettings, MediaItem } from './types';
 
 export function loadFromStorage<T>(key: string, defaultValue: T): T {
   try {
     const data = localStorage.getItem(key);
-    return data ? JSON.parse(data) : defaultValue;
+    if (data) {
+      const parsed = JSON.parse(data);
+      // Merge with defaults for backward compatibility
+      if (typeof defaultValue === 'object' && defaultValue !== null && !Array.isArray(defaultValue)) {
+        return { ...defaultValue, ...parsed } as T;
+      }
+      return parsed;
+    }
+    return defaultValue;
   } catch {
     return defaultValue;
   }
 }
 
 export function saveToStorage<T>(key: string, data: T): void {
-  localStorage.setItem(key, JSON.stringify(data));
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch (e) {
+    // localStorage might be full (especially with base64 images)
+    console.warn('Failed to save to localStorage:', e);
+  }
 }
 
 export const defaultSettings: BusinessSettings = {
@@ -39,6 +42,8 @@ export const defaultSettings: BusinessSettings = {
   invoicePrefix: 'INV',
   orderPrefix: 'ORD',
   lowStockAlert: 10,
+  bannerColor: '#059669',
+  receiptFooter: 'Thank you for your business!',
 };
 
 export const defaultProducts: Product[] = [
@@ -132,3 +137,33 @@ export const defaultInvoices: Invoice[] = [
   { id: '2', invoiceNumber: 'INV-002', orderId: '2', customerId: '2', customerName: 'Fatima Ali', amount: 3650, status: 'paid', dueDate: '2024-03-15', createdAt: '2024-03-01' },
   { id: '3', invoiceNumber: 'INV-003', orderId: '3', customerId: '3', customerName: 'Muhammad Usman', amount: 5600, status: 'sent', dueDate: '2024-03-25', createdAt: '2024-03-10' },
 ];
+
+export const defaultMedia: MediaItem[] = [];
+
+// Helper to compress image to a manageable size for localStorage
+export function compressImage(file: File, maxWidth = 400, quality = 0.7): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let { width, height } = img;
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) { reject(new Error('Canvas context failed')); return; }
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}

@@ -1,12 +1,16 @@
-import { useState } from 'react';
-import { BusinessSettings } from '../types';
-import { Save, Store, User, MapPin, Receipt, AlertTriangle } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { BusinessSettings, MediaItem } from '../types';
+import { compressImage } from '../store';
+import { Save, Store, MapPin, Receipt, AlertTriangle, Image as ImageIcon, X, Camera } from 'lucide-react';
+import MediaPage from './MediaPage';
 
-interface Props { settings: BusinessSettings; setSettings: React.Dispatch<React.SetStateAction<BusinessSettings>>; }
+interface Props { settings: BusinessSettings; setSettings: React.Dispatch<React.SetStateAction<BusinessSettings>>; media: MediaItem[]; }
 
-export default function SettingsPage({ settings, setSettings }: Props) {
+export default function SettingsPage({ settings, setSettings, media }: Props) {
   const [form, setForm] = useState<BusinessSettings>({ ...settings });
   const [saved, setSaved] = useState(false);
+  const [showLogoPicker, setShowLogoPicker] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   const handleSave = () => {
     setSettings(form);
@@ -21,8 +25,75 @@ export default function SettingsPage({ settings, setSettings }: Props) {
     }
   };
 
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const compressed = await compressImage(file, 200, 0.8);
+      setForm(f => ({ ...f, logo: compressed }));
+    } catch (err) {
+      console.error('Failed to upload logo:', err);
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      {/* Store Logo & Branding */}
+      <div className="bg-white rounded-xl shadow-sm border">
+        <div className="p-5 border-b flex items-center gap-3">
+          <Camera className="w-5 h-5 text-emerald-600" />
+          <h3 className="font-semibold text-gray-800">Store Logo & Branding</h3>
+        </div>
+        <div className="p-5">
+          <div className="flex items-start gap-6">
+            <div className="shrink-0">
+              <div className="w-24 h-24 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50 relative group">
+                {form.logo ? (
+                  <>
+                    <img src={form.logo} alt="Logo" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Camera className="w-6 h-6 text-white" />
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center">
+                    <ImageIcon className="w-8 h-8 text-gray-300 mx-auto" />
+                    <p className="text-xs text-gray-400 mt-1">No logo</p>
+                  </div>
+                )}
+                <button onClick={() => logoInputRef.current?.click()} className="absolute inset-0 cursor-pointer" />
+              </div>
+              <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+              <div className="flex gap-2 mt-2">
+                <button onClick={() => logoInputRef.current?.click()} className="text-xs text-emerald-600 hover:text-emerald-700 font-medium">Upload</button>
+                {media.length > 0 && <button onClick={() => setShowLogoPicker(true)} className="text-xs text-blue-600 hover:text-blue-700 font-medium">From Media</button>}
+                {form.logo && <button onClick={() => setForm(f => ({ ...f, logo: undefined }))} className="text-xs text-red-600 hover:text-red-700 font-medium">Remove</button>}
+              </div>
+            </div>
+            <div className="flex-1">
+              <p className="text-sm text-gray-600 mb-2">Your store logo appears on invoices, the sidebar, and receipts.</p>
+              <div className="bg-gray-50 rounded-lg p-3 text-xs text-gray-500">
+                <p>• Recommended size: 200×200px</p>
+                <p>• Formats: PNG, JPG, SVG</p>
+                <p>• Max file size: 2MB (auto-compressed)</p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Brand Color</label>
+            <div className="flex items-center gap-3">
+              <input type="color" value={form.bannerColor} onChange={e => setForm(f => ({ ...f, bannerColor: e.target.value }))} className="w-10 h-10 rounded border cursor-pointer" />
+              <input type="text" value={form.bannerColor} onChange={e => setForm(f => ({ ...f, bannerColor: e.target.value }))} className="border rounded-lg px-3 py-2 text-sm w-32" />
+              <div className="flex gap-1">
+                {['#059669', '#2563eb', '#7c3aed', '#dc2626', '#ea580c', '#0891b2', '#4f46e5', '#000000'].map(c => (
+                  <button key={c} onClick={() => setForm(f => ({ ...f, bannerColor: c }))} className="w-6 h-6 rounded-full border" style={{ backgroundColor: c }} />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Store Info */}
       <div className="bg-white rounded-xl shadow-sm border">
         <div className="p-5 border-b flex items-center gap-3">
@@ -115,6 +186,10 @@ export default function SettingsPage({ settings, setSettings }: Props) {
             <label className="block text-sm font-medium text-gray-700 mb-1">Default Shipping Cost ({form.currency})</label>
             <input type="number" value={form.defaultShippingCost} onChange={e => setForm(f => ({ ...f, defaultShippingCost: parseFloat(e.target.value) || 0 }))} className="w-full border rounded-lg px-3 py-2 text-sm" />
           </div>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Receipt/Invoice Footer Text</label>
+            <input type="text" value={form.receiptFooter} onChange={e => setForm(f => ({ ...f, receiptFooter: e.target.value }))} className="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Thank you for your business!" />
+          </div>
         </div>
       </div>
 
@@ -168,6 +243,19 @@ export default function SettingsPage({ settings, setSettings }: Props) {
           Reset All Data
         </button>
       </div>
+
+      {/* Logo Picker from Media */}
+      {showLogoPicker && (
+        <MediaPage
+          media={media}
+          setMedia={() => {}}
+          selectMode
+          onSelect={(url) => {
+            if (url) setForm(f => ({ ...f, logo: url }));
+            setShowLogoPicker(false);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Order, OrderChannel, OrderStatus, PaymentStatus, Customer, Product, BusinessSettings, OrderItem } from '../types';
-import { Plus, Search, Filter, Eye, Edit2, Trash2, X } from 'lucide-react';
+import { Order, OrderChannel, OrderStatus, PaymentStatus, Customer, Product, BusinessSettings, OrderItem, MediaItem } from '../types';
+import { Plus, Search, Eye, Edit2, Trash2, X, Image as ImageIcon } from 'lucide-react';
+import MediaPage from './MediaPage';
 
 interface Props {
   orders: Order[];
@@ -8,20 +9,23 @@ interface Props {
   customers: Customer[];
   products: Product[];
   settings: BusinessSettings;
+  media: MediaItem[];
 }
 
-export default function OrdersPage({ orders, setOrders, customers, products, settings }: Props) {
+export default function OrdersPage({ orders, setOrders, customers, products, settings, media }: Props) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [channelFilter, setChannelFilter] = useState<string>('all');
   const [showModal, setShowModal] = useState(false);
   const [showDetail, setShowDetail] = useState<Order | null>(null);
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
+  const [showMediaPicker, setShowMediaPicker] = useState(false);
+  const [mediaPickerTarget, setMediaPickerTarget] = useState<number>(-1);
   const [form, setForm] = useState({
     customerId: '', customerName: '', channel: 'website' as OrderChannel,
     status: 'pending' as OrderStatus, paymentStatus: 'unpaid' as PaymentStatus,
     paymentMethod: 'Cash on Delivery', shippingAddress: '', shippingCost: settings.defaultShippingCost,
-    discount: 0, tax: 0, notes: '', items: [] as { productId: string; quantity: number }[],
+    discount: 0, tax: 0, notes: '', items: [] as { productId: string; quantity: number; image?: string }[],
   });
 
   const filtered = orders.filter(o => {
@@ -55,22 +59,31 @@ export default function OrdersPage({ orders, setOrders, customers, products, set
       status: order.status, paymentStatus: order.paymentStatus, paymentMethod: order.paymentMethod,
       shippingAddress: order.shippingAddress, shippingCost: order.shippingCost, discount: order.discount,
       tax: order.tax, notes: order.notes,
-      items: order.items.map(i => ({ productId: i.productId, quantity: i.quantity })),
+      items: order.items.map(i => ({ productId: i.productId, quantity: i.quantity, image: i.image })),
     });
     setShowModal(true);
   };
 
-  const addItem = () => setForm(f => ({ ...f, items: [...f.items, { productId: '', quantity: 1 }] }));
+  const addItem = () => setForm(f => ({ ...f, items: [...f.items, { productId: '', quantity: 1, image: '' }] }));
   const removeItem = (idx: number) => setForm(f => ({ ...f, items: f.items.filter((_, i) => i !== idx) }));
   const updateItem = (idx: number, field: string, value: string | number) => {
-    setForm(f => ({ ...f, items: f.items.map((item, i) => i === idx ? { ...item, [field]: value } : item) }));
+    setForm(f => ({
+      ...f, items: f.items.map((item, i) => {
+        if (i !== idx) return item;
+        if (field === 'productId') {
+          const product = products.find(p => p.id === value);
+          return { ...item, productId: value as string, image: product?.image || item.image };
+        }
+        return { ...item, [field]: value };
+      })
+    }));
   };
 
   const calculateTotals = () => {
     const orderItems: OrderItem[] = form.items.map(item => {
       const product = products.find(p => p.id === item.productId);
       const price = product?.price || 0;
-      return { productId: item.productId, productName: product?.name || '', quantity: item.quantity, price, total: price * item.quantity };
+      return { productId: item.productId, productName: product?.name || '', quantity: item.quantity, price, total: price * item.quantity, image: item.image || product?.image };
     });
     const subtotal = orderItems.reduce((s, i) => s + i.total, 0);
     const total = subtotal + form.shippingCost + form.tax - form.discount;
@@ -141,6 +154,7 @@ export default function OrdersPage({ orders, setOrders, customers, products, set
               <tr>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Order</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Customer</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-600">Items</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Channel</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Payment</th>
@@ -154,6 +168,20 @@ export default function OrdersPage({ orders, setOrders, customers, products, set
                 <tr key={order.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 font-medium">{order.orderNumber}</td>
                   <td className="px-4 py-3">{order.customerName}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-1">
+                      {order.items.slice(0, 3).map((item, i) => (
+                        <div key={i} className="w-7 h-7 rounded bg-gray-100 overflow-hidden flex items-center justify-center border">
+                          {item.image ? (
+                            <img src={item.image} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-xs text-gray-400">{item.productName[0]}</span>
+                          )}
+                        </div>
+                      ))}
+                      {order.items.length > 3 && <span className="text-xs text-gray-400 ml-1">+{order.items.length - 3}</span>}
+                    </div>
+                  </td>
                   <td className="px-4 py-3"><span className="capitalize">{channelIcons[order.channel]} {order.channel}</span></td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[order.status]}`}>{order.status}</span>
@@ -200,9 +228,19 @@ export default function OrdersPage({ orders, setOrders, customers, products, set
                 <h4 className="font-medium text-gray-700 mb-2">Items</h4>
                 <div className="border rounded-lg divide-y">
                   {showDetail.items.map((item, i) => (
-                    <div key={i} className="p-3 flex justify-between text-sm">
-                      <span>{item.productName} × {item.quantity}</span>
-                      <span className="font-medium">{settings.currency} {item.total.toLocaleString()}</span>
+                    <div key={i} className="p-3 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded bg-gray-100 overflow-hidden flex items-center justify-center shrink-0 border">
+                        {item.image ? (
+                          <img src={item.image} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-sm text-gray-400">{item.productName[0]}</span>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{item.productName}</p>
+                        <p className="text-xs text-gray-500">Qty: {item.quantity} × {settings.currency} {item.price.toLocaleString()}</p>
+                      </div>
+                      <span className="text-sm font-medium">{settings.currency} {item.total.toLocaleString()}</span>
                     </div>
                   ))}
                 </div>
@@ -281,16 +319,29 @@ export default function OrdersPage({ orders, setOrders, customers, products, set
                   <button onClick={addItem} className="text-sm text-emerald-600 hover:text-emerald-700 font-medium">+ Add Item</button>
                 </div>
                 <div className="space-y-2">
-                  {form.items.map((item, idx) => (
-                    <div key={idx} className="flex gap-2 items-center">
-                      <select value={item.productId} onChange={e => updateItem(idx, 'productId', e.target.value)} className="flex-1 border rounded-lg px-3 py-2 text-sm">
-                        <option value="">Select product</option>
-                        {products.map(p => <option key={p.id} value={p.id}>{p.name} - {settings.currency} {p.price}</option>)}
-                      </select>
-                      <input type="number" min="1" value={item.quantity} onChange={e => updateItem(idx, 'quantity', parseInt(e.target.value) || 1)} className="w-20 border rounded-lg px-3 py-2 text-sm" />
-                      <button onClick={() => removeItem(idx)} className="p-2 text-red-500 hover:bg-red-50 rounded"><X className="w-4 h-4" /></button>
-                    </div>
-                  ))}
+                  {form.items.map((item, idx) => {
+                    const product = products.find(p => p.id === item.productId);
+                    return (
+                      <div key={idx} className="flex gap-2 items-center bg-gray-50 rounded-lg p-2">
+                        <div className="w-10 h-10 rounded bg-white border overflow-hidden flex items-center justify-center shrink-0">
+                          {item.image ? (
+                            <img src={item.image} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <ImageIcon className="w-4 h-4 text-gray-300" />
+                          )}
+                        </div>
+                        <select value={item.productId} onChange={e => updateItem(idx, 'productId', e.target.value)} className="flex-1 border rounded-lg px-3 py-2 text-sm bg-white">
+                          <option value="">Select product</option>
+                          {products.map(p => <option key={p.id} value={p.id}>{p.name} - {settings.currency} {p.price}</option>)}
+                        </select>
+                        <input type="number" min="1" value={item.quantity} onChange={e => updateItem(idx, 'quantity', parseInt(e.target.value) || 1)} className="w-16 border rounded-lg px-2 py-2 text-sm bg-white" />
+                        <button onClick={() => { setMediaPickerTarget(idx); setShowMediaPicker(true); }} className="p-2 hover:bg-white rounded border" title="Set image">
+                          <ImageIcon className="w-4 h-4 text-emerald-600" />
+                        </button>
+                        <button onClick={() => removeItem(idx)} className="p-2 text-red-500 hover:bg-white rounded border"><X className="w-4 h-4" /></button>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -332,6 +383,24 @@ export default function OrdersPage({ orders, setOrders, customers, products, set
             </div>
           </div>
         </div>
+      )}
+
+      {/* Media Picker for order items */}
+      {showMediaPicker && (
+        <MediaPage
+          media={media}
+          setMedia={() => {}}
+          selectMode
+          onSelect={(url) => {
+            if (url && mediaPickerTarget >= 0) {
+              setForm(f => ({
+                ...f,
+                items: f.items.map((item, i) => i === mediaPickerTarget ? { ...item, image: url } : item)
+              }));
+            }
+            setShowMediaPicker(false);
+          }}
+        />
       )}
     </div>
   );
