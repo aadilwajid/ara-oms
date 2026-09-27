@@ -11,7 +11,7 @@ import ExpensesPage from './pages/ExpensesPage';
 import IncomePage from './pages/IncomePage';
 import MediaPage from './pages/MediaPage';
 import SettingsPage from './pages/SettingsPage';
-import { LayoutDashboard, ShoppingCart, Users, Package, Warehouse, FileText, TrendingDown, TrendingUp, Settings, Menu, X, Store, Image as ImageIcon, Lightbulb, Plus, Zap, Download, Moon, Sun, Bell } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Users, Package, Warehouse, FileText, TrendingDown, TrendingUp, Settings, Menu, X, Store, Image as ImageIcon, Plus, Download, Moon, Sun, Bell } from 'lucide-react';
 import Toast from './components/Toast';
 import QuickActions from './components/QuickActions';
 
@@ -28,7 +28,6 @@ function App() {
   const [media, setMedia] = useState<MediaItem[]>([]);
   const [activityLog, setActivityLog] = useState<ActivityLog[]>([]);
   const [settings, setSettings] = useState<BusinessSettings>(defaultSettings);
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const [toasts, setToasts] = useState<Array<{ id: string; message: string; type: 'success' | 'error' | 'info' }>>([]);
   const [showNotifications, setShowNotifications] = useState(false);
 
@@ -187,21 +186,6 @@ function App() {
     }
   };
 
-  const suggestedFeatures = [
-    { title: 'Bulk Order Import', desc: 'Import orders from CSV/Excel files for bulk processing', icon: '📥' },
-    { title: 'Courier Integration', desc: 'Auto-generate shipping labels with TCS, Leopards, CallCourier APIs', icon: '🚚' },
-    { title: 'SMS/WhatsApp Notifications', desc: 'Auto-send order confirmations and delivery updates', icon: '💬' },
-    { title: 'Multi-Warehouse Support', desc: 'Manage stock across multiple warehouse locations', icon: '🏭' },
-    { title: 'Supplier Management', desc: 'Track suppliers, purchase orders, and lead times', icon: '🤝' },
-    { title: 'Sales Reports & Analytics', desc: 'Detailed charts for revenue, best sellers, and trends', icon: '📊' },
-    { title: 'Discount & Coupon System', desc: 'Create promo codes and automatic discounts', icon: '🏷️' },
-    { title: 'Return & Refund Management', desc: 'Process returns with RMA numbers and refund tracking', icon: '↩️' },
-    { title: 'Employee/User Roles', desc: 'Multi-user access with role-based permissions', icon: '👥' },
-    { title: 'Tax Reports (FBR)', desc: 'Generate tax reports compliant with FBR Pakistan', icon: '📋' },
-    { title: 'Barcode/QR Scanner', desc: 'Scan barcodes for quick inventory and order processing', icon: '📱' },
-    { title: 'Customer Loyalty Program', desc: 'Reward points system for repeat customers', icon: '⭐' },
-  ];
-
   return (
     <div className={`flex h-screen bg-gray-50 overflow-hidden ${darkMode ? 'dark' : ''}`}>
       {/* Mobile overlay */}
@@ -245,10 +229,6 @@ function App() {
           ))}
         </nav>
         <div className="p-3 border-t border-emerald-700 shrink-0 space-y-1">
-          <button onClick={() => setShowSuggestions(true)} className="flex items-center gap-2 w-full px-4 py-2.5 rounded-lg text-emerald-200 hover:bg-emerald-700/50 hover:text-white text-sm transition-colors">
-            <Lightbulb className="w-5 h-5" />
-            <span>Feature Ideas</span>
-          </button>
           <div className="flex gap-1">
             <button onClick={() => exportData('json')} className="flex-1 flex items-center justify-center gap-1 px-2 py-2 rounded-lg text-emerald-200 hover:bg-emerald-700/50 hover:text-white text-xs transition-colors" title="Export as JSON">
               <Download className="w-4 h-4" />
@@ -363,48 +343,6 @@ function App() {
 
       {/* Toast Notifications */}
       <Toast toasts={toasts} />
-
-      {/* Feature Suggestions Modal */}
-      {showSuggestions && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowSuggestions(false)}>
-          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-auto" onClick={e => e.stopPropagation()}>
-            <div className="p-5 border-b flex items-center justify-between sticky top-0 bg-white">
-              <div className="flex items-center gap-2">
-                <Lightbulb className="w-5 h-5 text-amber-500" />
-                <h3 className="text-lg font-semibold">Suggested Features</h3>
-              </div>
-              <button onClick={() => setShowSuggestions(false)}><X className="w-5 h-5" /></button>
-            </div>
-            <div className="p-5">
-              <p className="text-sm text-gray-600 mb-4">Here are powerful features you can add to make your OMS even better for your Pakistani e-commerce business:</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {suggestedFeatures.map((f, i) => (
-                  <div key={i} className="border rounded-lg p-3 hover:border-emerald-300 hover:bg-emerald-50/30 transition-colors">
-                    <div className="flex items-start gap-2">
-                      <span className="text-xl">{f.icon}</span>
-                      <div>
-                        <h4 className="font-medium text-sm text-gray-800">{f.title}</h4>
-                        <p className="text-xs text-gray-500 mt-0.5">{f.desc}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
-                <h4 className="font-medium text-blue-800 text-sm mb-1">💡 Productivity Tips</h4>
-                <ul className="text-xs text-blue-700 space-y-1">
-                  <li>• Use <kbd className="px-1.5 py-0.5 bg-white rounded border text-xs">Ctrl+N</kbd> to quickly create new orders</li>
-                  <li>• Press <kbd className="px-1.5 py-0.5 bg-white rounded border text-xs">Ctrl+K</kbd> to focus search</li>
-                  <li>• Toggle <kbd className="px-1.5 py-0.5 bg-white rounded border text-xs">Ctrl+D</kbd> for dark mode</li>
-                  <li>• Export data regularly for backup (JSON/CSV)</li>
-                  <li>• Use Media Manager to organize product photos</li>
-                  <li>• Check notifications for pending tasks</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
