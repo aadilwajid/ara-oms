@@ -127,4 +127,12 @@ export interface BusinessSettings {
   receiptFooter: string;
 }
 
+export interface ActivityLog {
+  id: string;
+  action: string;
+  details: string;
+  timestamp: string;
+  user: string;
+}
+
 export type Page = 'dashboard' | 'orders' | 'customers' | 'products' | 'inventory' | 'invoices' | 'expenses' | 'income' | 'media' | 'settings';

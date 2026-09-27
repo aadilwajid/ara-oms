@@ -244,6 +244,31 @@ export default function SettingsPage({ settings, setSettings, media }: Props) {
         </button>
       </div>
 
+      {/* Keyboard Shortcuts Reference */}
+      <div className="bg-white rounded-xl shadow-sm border">
+        <div className="p-5 border-b">
+          <h3 className="font-semibold text-gray-800">⌨️ Keyboard Shortcuts</h3>
+        </div>
+        <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+            <span className="text-sm text-gray-700">Create new order</span>
+            <kbd className="px-2 py-1 bg-white border rounded text-xs font-mono">Ctrl + N</kbd>
+          </div>
+          <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+            <span className="text-sm text-gray-700">Focus search</span>
+            <kbd className="px-2 py-1 bg-white border rounded text-xs font-mono">Ctrl + K</kbd>
+          </div>
+          <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+            <span className="text-sm text-gray-700">Toggle dark mode</span>
+            <kbd className="px-2 py-1 bg-white border rounded text-xs font-mono">Ctrl + D</kbd>
+          </div>
+          <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+            <span className="text-sm text-gray-700">Close modal</span>
+            <kbd className="px-2 py-1 bg-white border rounded text-xs font-mono">Esc</kbd>
+          </div>
+        </div>
+      </div>
+
       {/* Logo Picker from Media */}
       {showLogoPicker && (
         <MediaPage
