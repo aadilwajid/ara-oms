@@ -1,4 +1,4 @@
-import { Product, Customer, Order, Invoice, Expense, Income, BusinessSettings, MediaItem } from './types';
+import { Product, Customer, Order, Invoice, Expense, Income, BusinessSettings, MediaItem, ActivityLog } from './types';
 
 export function loadFromStorage<T>(key: string, defaultValue: T): T {
   try {
@@ -137,6 +137,8 @@ export const defaultInvoices: Invoice[] = [
   { id: '2', invoiceNumber: 'INV-002', orderId: '2', customerId: '2', customerName: 'Fatima Ali', amount: 3650, status: 'paid', dueDate: '2024-03-15', createdAt: '2024-03-01' },
   { id: '3', invoiceNumber: 'INV-003', orderId: '3', customerId: '3', customerName: 'Muhammad Usman', amount: 5600, status: 'sent', dueDate: '2024-03-25', createdAt: '2024-03-10' },
 ];
+
+export const defaultActivityLog: ActivityLog[] = [];
 
 export const defaultMedia: MediaItem[] = [];
 

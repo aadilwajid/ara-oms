@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { Page, Product, Customer, Order, Invoice, Expense, Income, BusinessSettings, MediaItem } from './types';
-import { loadFromStorage, saveToStorage, defaultSettings, defaultProducts, defaultCustomers, defaultOrders, defaultInvoices, defaultExpenses, defaultIncome, defaultMedia } from './store';
+import { useState, useEffect, useCallback } from 'react';
+import { Page, Product, Customer, Order, Invoice, Expense, Income, BusinessSettings, MediaItem, ActivityLog } from './types';
+import { loadFromStorage, saveToStorage, defaultSettings, defaultProducts, defaultCustomers, defaultOrders, defaultInvoices, defaultExpenses, defaultIncome, defaultMedia, defaultActivityLog } from './store';
 import Dashboard from './pages/Dashboard';
 import OrdersPage from './pages/OrdersPage';
 import CustomersPage from './pages/CustomersPage';
@@ -11,11 +11,14 @@ import ExpensesPage from './pages/ExpensesPage';
 import IncomePage from './pages/IncomePage';
 import MediaPage from './pages/MediaPage';
 import SettingsPage from './pages/SettingsPage';
-import { LayoutDashboard, ShoppingCart, Users, Package, Warehouse, FileText, TrendingDown, TrendingUp, Settings, Menu, X, Store, Image as ImageIcon, Lightbulb } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Users, Package, Warehouse, FileText, TrendingDown, TrendingUp, Settings, Menu, X, Store, Image as ImageIcon, Lightbulb, Plus, Zap, Download, Moon, Sun, Bell } from 'lucide-react';
+import Toast from './components/Toast';
+import QuickActions from './components/QuickActions';
 
 function App() {
   const [currentPage, setCurrentPage] = useState<Page>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
@@ -23,8 +26,11 @@ function App() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [income, setIncome] = useState<Income[]>([]);
   const [media, setMedia] = useState<MediaItem[]>([]);
+  const [activityLog, setActivityLog] = useState<ActivityLog[]>([]);
   const [settings, setSettings] = useState<BusinessSettings>(defaultSettings);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [toasts, setToasts] = useState<Array<{ id: string; message: string; type: 'success' | 'error' | 'info' }>>([]);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
     setProducts(loadFromStorage('oms_products', defaultProducts));
@@ -34,7 +40,9 @@ function App() {
     setExpenses(loadFromStorage('oms_expenses', defaultExpenses));
     setIncome(loadFromStorage('oms_income', defaultIncome));
     setMedia(loadFromStorage('oms_media', defaultMedia));
+    setActivityLog(loadFromStorage('oms_activity_log', defaultActivityLog));
     setSettings(loadFromStorage('oms_settings', defaultSettings));
+    setDarkMode(loadFromStorage('oms_dark_mode', false));
   }, []);
 
   useEffect(() => { saveToStorage('oms_products', products); }, [products]);
@@ -44,7 +52,111 @@ function App() {
   useEffect(() => { saveToStorage('oms_expenses', expenses); }, [expenses]);
   useEffect(() => { saveToStorage('oms_income', income); }, [income]);
   useEffect(() => { saveToStorage('oms_media', media); }, [media]);
+  useEffect(() => { saveToStorage('oms_activity_log', activityLog); }, [activityLog]);
   useEffect(() => { saveToStorage('oms_settings', settings); }, [settings]);
+  useEffect(() => { saveToStorage('oms_dark_mode', darkMode); }, [darkMode]);
+
+  // Toast notification system
+  const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    const id = Date.now().toString();
+    setToasts(prev => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 3000);
+  }, []);
+
+  // Activity logging
+  const logActivity = useCallback((action: string, details: string) => {
+    const newLog: ActivityLog = {
+      id: Date.now().toString(),
+      action,
+      details,
+      timestamp: new Date().toISOString(),
+      user: settings.ownerName || 'Admin',
+    };
+    setActivityLog(prev => [newLog, ...prev].slice(0, 100)); // Keep last 100 entries
+  }, [settings.ownerName]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        switch (e.key) {
+          case 'n':
+            e.preventDefault();
+            if (currentPage === 'orders') {
+              // Trigger new order modal (handled by OrdersPage)
+              window.dispatchEvent(new CustomEvent('oms:newOrder'));
+            }
+            break;
+          case 'k':
+            e.preventDefault();
+            // Focus search
+            const searchInput = document.querySelector('input[placeholder*="Search"]') as HTMLInputElement;
+            searchInput?.focus();
+            break;
+          case 'd':
+            e.preventDefault();
+            setDarkMode(prev => !prev);
+            showToast(`${!darkMode ? 'Dark' : 'Light'} mode enabled`, 'info');
+            break;
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [currentPage, darkMode, showToast]);
+
+  // Export data
+  const exportData = (format: 'json' | 'csv') => {
+    const data = {
+      products,
+      customers,
+      orders,
+      invoices,
+      expenses,
+      income,
+      settings,
+      exportDate: new Date().toISOString(),
+    };
+
+    let content: string;
+    let mimeType: string;
+    let extension: string;
+
+    if (format === 'json') {
+      content = JSON.stringify(data, null, 2);
+      mimeType = 'application/json';
+      extension = 'json';
+    } else {
+      // CSV export - combine all data
+      const rows = [
+        ['Type', 'ID', 'Name/Number', 'Amount', 'Date', 'Status'],
+        ...products.map(p => ['Product', p.id, p.name, p.price.toString(), p.createdAt, '']),
+        ...customers.map(c => ['Customer', c.id, c.name, c.totalSpent.toString(), c.createdAt, '']),
+        ...orders.map(o => ['Order', o.id, o.orderNumber, o.total.toString(), o.createdAt, o.status]),
+      ];
+      content = rows.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+      mimeType = 'text/csv';
+      extension = 'csv';
+    }
+
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `store-backup-${new Date().toISOString().split('T')[0]}.${extension}`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast(`Data exported as ${format.toUpperCase()}`, 'success');
+    logActivity('Data Export', `Exported all data as ${format.toUpperCase()}`);
+  };
+
+  // Notifications
+  const pendingOrders = orders.filter(o => o.status === 'pending' || o.status === 'processing').length;
+  const lowStockProducts = products.filter(p => p.stock <= p.lowStockThreshold).length;
+  const overdueInvoices = invoices.filter(i => i.status === 'sent' && new Date(i.dueDate) < new Date()).length;
+  const hasNotifications = pendingOrders > 0 || lowStockProducts > 0 || overdueInvoices > 0;
 
   const navItems = [
     { id: 'dashboard' as Page, label: 'Dashboard', icon: LayoutDashboard },
@@ -62,7 +174,7 @@ function App() {
   const renderPage = () => {
     switch (currentPage) {
       case 'dashboard': return <Dashboard orders={orders} customers={customers} products={products} expenses={expenses} income={income} settings={settings} />;
-      case 'orders': return <OrdersPage orders={orders} setOrders={setOrders} customers={customers} products={products} settings={settings} media={media} />;
+      case 'orders': return <OrdersPage orders={orders} setOrders={setOrders} customers={customers} products={products} settings={settings} media={media} showToast={showToast} logActivity={logActivity} />;
       case 'customers': return <CustomersPage customers={customers} setCustomers={setCustomers} />;
       case 'products': return <ProductsPage products={products} setProducts={setProducts} media={media} />;
       case 'inventory': return <InventoryPage products={products} setProducts={setProducts} settings={settings} />;
@@ -91,7 +203,7 @@ function App() {
   ];
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className={`flex h-screen bg-gray-50 overflow-hidden ${darkMode ? 'dark' : ''}`}>
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
@@ -132,11 +244,21 @@ function App() {
             </button>
           ))}
         </nav>
-        <div className="p-3 border-t border-emerald-700 shrink-0">
+        <div className="p-3 border-t border-emerald-700 shrink-0 space-y-1">
           <button onClick={() => setShowSuggestions(true)} className="flex items-center gap-2 w-full px-4 py-2.5 rounded-lg text-emerald-200 hover:bg-emerald-700/50 hover:text-white text-sm transition-colors">
             <Lightbulb className="w-5 h-5" />
             <span>Feature Ideas</span>
           </button>
+          <div className="flex gap-1">
+            <button onClick={() => exportData('json')} className="flex-1 flex items-center justify-center gap-1 px-2 py-2 rounded-lg text-emerald-200 hover:bg-emerald-700/50 hover:text-white text-xs transition-colors" title="Export as JSON">
+              <Download className="w-4 h-4" />
+              <span>JSON</span>
+            </button>
+            <button onClick={() => exportData('csv')} className="flex-1 flex items-center justify-center gap-1 px-2 py-2 rounded-lg text-emerald-200 hover:bg-emerald-700/50 hover:text-white text-xs transition-colors" title="Export as CSV">
+              <Download className="w-4 h-4" />
+              <span>CSV</span>
+            </button>
+          </div>
         </div>
       </aside>
 
@@ -148,6 +270,82 @@ function App() {
           </button>
           <h2 className="text-xl font-semibold text-gray-800 capitalize">{currentPage}</h2>
           <div className="ml-auto flex items-center gap-3">
+            {/* Quick Actions Button */}
+            <QuickActions
+              onNewOrder={() => { setCurrentPage('orders'); window.dispatchEvent(new CustomEvent('oms:newOrder')); }}
+              onNewProduct={() => { setCurrentPage('products'); window.dispatchEvent(new CustomEvent('oms:newProduct')); }}
+              onNewCustomer={() => { setCurrentPage('customers'); window.dispatchEvent(new CustomEvent('oms:newCustomer')); }}
+            />
+
+            {/* Notifications */}
+            <div className="relative">
+              <button onClick={() => setShowNotifications(!showNotifications)} className="relative p-2 hover:bg-gray-100 rounded-lg">
+                <Bell className="w-5 h-5 text-gray-600" />
+                {hasNotifications && (
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                )}
+              </button>
+              {showNotifications && (
+                <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border z-50">
+                  <div className="p-4 border-b">
+                    <h3 className="font-semibold text-gray-800">Notifications</h3>
+                  </div>
+                  <div className="max-h-96 overflow-auto">
+                    {pendingOrders > 0 && (
+                      <div className="p-4 border-b hover:bg-gray-50 cursor-pointer" onClick={() => { setCurrentPage('orders'); setShowNotifications(false); }}>
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+                            <ShoppingCart className="w-4 h-4 text-blue-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-800">{pendingOrders} Pending Orders</p>
+                            <p className="text-xs text-gray-500 mt-0.5">Orders need processing</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {lowStockProducts > 0 && (
+                      <div className="p-4 border-b hover:bg-gray-50 cursor-pointer" onClick={() => { setCurrentPage('inventory'); setShowNotifications(false); }}>
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                            <Package className="w-4 h-4 text-amber-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-800">{lowStockProducts} Low Stock Items</p>
+                            <p className="text-xs text-gray-500 mt-0.5">Products need restocking</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {overdueInvoices > 0 && (
+                      <div className="p-4 border-b hover:bg-gray-50 cursor-pointer" onClick={() => { setCurrentPage('invoices'); setShowNotifications(false); }}>
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                            <FileText className="w-4 h-4 text-red-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-800">{overdueInvoices} Overdue Invoices</p>
+                            <p className="text-xs text-gray-500 mt-0.5">Invoices past due date</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {!hasNotifications && (
+                      <div className="p-8 text-center text-gray-400">
+                        <Bell className="w-12 h-12 mx-auto mb-2 opacity-30" />
+                        <p className="text-sm">No notifications</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Dark Mode Toggle */}
+            <button onClick={() => { setDarkMode(!darkMode); showToast(`${!darkMode ? 'Dark' : 'Light'} mode enabled`, 'info'); }} className="p-2 hover:bg-gray-100 rounded-lg">
+              {darkMode ? <Sun className="w-5 h-5 text-gray-600" /> : <Moon className="w-5 h-5 text-gray-600" />}
+            </button>
+
             <span className="text-sm text-gray-500 hidden sm:inline">{settings.currency}</span>
             <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-white text-sm font-medium overflow-hidden">
               {settings.logo ? (
@@ -162,6 +360,9 @@ function App() {
           {renderPage()}
         </div>
       </main>
+
+      {/* Toast Notifications */}
+      <Toast toasts={toasts} />
 
       {/* Feature Suggestions Modal */}
       {showSuggestions && (
@@ -190,13 +391,14 @@ function App() {
                 ))}
               </div>
               <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
-                <h4 className="font-medium text-blue-800 text-sm mb-1">💡 Pro Tips for Your Store</h4>
+                <h4 className="font-medium text-blue-800 text-sm mb-1">💡 Productivity Tips</h4>
                 <ul className="text-xs text-blue-700 space-y-1">
-                  <li>• Use Media Manager to upload product photos, then assign them in Products page</li>
-                  <li>• Set up your store logo in Settings for professional invoices</li>
-                  <li>• Track all channels (Daraz, WhatsApp, Instagram) in one place</li>
-                  <li>• Monitor low stock alerts from the Dashboard</li>
-                  <li>• Use expense tracking to calculate your actual profit margins</li>
+                  <li>• Use <kbd className="px-1.5 py-0.5 bg-white rounded border text-xs">Ctrl+N</kbd> to quickly create new orders</li>
+                  <li>• Press <kbd className="px-1.5 py-0.5 bg-white rounded border text-xs">Ctrl+K</kbd> to focus search</li>
+                  <li>• Toggle <kbd className="px-1.5 py-0.5 bg-white rounded border text-xs">Ctrl+D</kbd> for dark mode</li>
+                  <li>• Export data regularly for backup (JSON/CSV)</li>
+                  <li>• Use Media Manager to organize product photos</li>
+                  <li>• Check notifications for pending tasks</li>
                 </ul>
               </div>
             </div>

@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Order, OrderChannel, OrderStatus, PaymentStatus, Customer, Product, BusinessSettings, OrderItem, MediaItem } from '../types';
 import { Plus, Search, Eye, Edit2, Trash2, X, Image as ImageIcon } from 'lucide-react';
 import MediaPage from './MediaPage';
+
+import { ActivityLog } from '../types';
 
 interface Props {
   orders: Order[];
@@ -10,9 +12,11 @@ interface Props {
   products: Product[];
   settings: BusinessSettings;
   media: MediaItem[];
+  showToast?: (message: string, type?: 'success' | 'error' | 'info') => void;
+  logActivity?: (action: string, details: string) => void;
 }
 
-export default function OrdersPage({ orders, setOrders, customers, products, settings, media }: Props) {
+export default function OrdersPage({ orders, setOrders, customers, products, settings, media, showToast, logActivity }: Props) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [channelFilter, setChannelFilter] = useState<string>('all');
@@ -97,24 +101,41 @@ export default function OrdersPage({ orders, setOrders, customers, products, set
       setOrders(orders.map(o => o.id === editingOrder.id ? {
         ...o, ...form, items: orderItems, subtotal, total, updatedAt: now,
       } : o));
+      showToast?.('Order updated successfully', 'success');
+      logActivity?.('Order Updated', `Updated order ${editingOrder.orderNumber}`);
     } else {
+      const orderNumber = `${settings.orderPrefix}-${String(orders.length + 1).padStart(3, '0')}`;
       const newOrder: Order = {
-        id: Date.now().toString(), orderNumber: `${settings.orderPrefix}-${String(orders.length + 1).padStart(3, '0')}`,
+        id: Date.now().toString(), orderNumber,
         ...form, items: orderItems, subtotal, total, createdAt: now, updatedAt: now,
       };
       setOrders([newOrder, ...orders]);
+      showToast?.(`Order ${orderNumber} created successfully`, 'success');
+      logActivity?.('Order Created', `Created new order ${orderNumber} for ${form.customerName}`);
     }
     setShowModal(false);
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Delete this order?')) setOrders(orders.filter(o => o.id !== id));
+    if (confirm('Delete this order?')) {
+      const order = orders.find(o => o.id === id);
+      setOrders(orders.filter(o => o.id !== id));
+      showToast?.('Order deleted', 'info');
+      if (order) logActivity?.('Order Deleted', `Deleted order ${order.orderNumber}`);
+    }
   };
 
   const selectCustomer = (customerId: string) => {
     const c = customers.find(cu => cu.id === customerId);
     if (c) setForm(f => ({ ...f, customerId: c.id, customerName: c.name, shippingAddress: `${c.address}, ${c.city}` }));
   };
+
+  // Listen for keyboard shortcut to open new order modal
+  useEffect(() => {
+    const handleNewOrder = () => openNew();
+    window.addEventListener('oms:newOrder', handleNewOrder);
+    return () => window.removeEventListener('oms:newOrder', handleNewOrder);
+  }, []);
 
   return (
     <div className="space-y-4">
