@@ -9,6 +9,7 @@ export interface Product {
   lowStockThreshold: number;
   description: string;
   image?: string;
+  images?: string[];
   createdAt: string;
 }
 
@@ -30,6 +31,7 @@ export interface OrderItem {
   quantity: number;
   price: number;
   total: number;
+  image?: string;
 }
 
 export type OrderChannel = 'website' | 'daraz' | 'shopify' | 'whatsapp' | 'instagram' | 'facebook' | 'phone' | 'walk-in';
@@ -93,6 +95,17 @@ export interface Income {
   createdAt: string;
 }
 
+export interface MediaItem {
+  id: string;
+  name: string;
+  url: string; // base64 data URL
+  type: string; // mime type
+  size: number; // bytes
+  folder: string;
+  tags: string[];
+  createdAt: string;
+}
+
 export interface BusinessSettings {
   storeName: string;
   ownerName: string;
@@ -109,6 +122,9 @@ export interface BusinessSettings {
   invoicePrefix: string;
   orderPrefix: string;
   lowStockAlert: number;
+  logo?: string; // base64 data URL
+  bannerColor: string;
+  receiptFooter: string;
 }
 
-export type Page = 'dashboard' | 'orders' | 'customers' | 'products' | 'inventory' | 'invoices' | 'expenses' | 'income' | 'settings';
+export type Page = 'dashboard' | 'orders' | 'customers' | 'products' | 'inventory' | 'invoices' | 'expenses' | 'income' | 'media' | 'settings';

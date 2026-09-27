@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Invoice, Order, Customer, BusinessSettings } from '../types';
-import { Plus, Search, Eye, Trash2, X, FileText, Printer } from 'lucide-react';
+import { Plus, Search, Eye, Trash2, X, Printer } from 'lucide-react';
 
 interface Props {
   invoices: Invoice[];
@@ -180,11 +180,14 @@ export default function InvoicesPage({ invoices, setInvoices, orders, customers,
             </div>
             <div className="p-6">
               <div className="flex justify-between items-start mb-6">
-                <div>
-                  <h2 className="text-xl font-bold text-emerald-700">{settings.storeName}</h2>
-                  <p className="text-sm text-gray-500">{settings.address}, {settings.city}</p>
-                  <p className="text-sm text-gray-500">{settings.phone}</p>
-                  {settings.ntn && <p className="text-sm text-gray-500">NTN: {settings.ntn}</p>}
+                <div className="flex items-center gap-3">
+                  {settings.logo && <img src={settings.logo} alt="" className="w-12 h-12 rounded-lg object-cover" />}
+                  <div>
+                    <h2 className="text-xl font-bold" style={{ color: settings.bannerColor }}>{settings.storeName}</h2>
+                    <p className="text-sm text-gray-500">{settings.address}, {settings.city}</p>
+                    <p className="text-sm text-gray-500">{settings.phone}</p>
+                    {settings.ntn && <p className="text-sm text-gray-500">NTN: {settings.ntn}</p>}
+                  </div>
                 </div>
                 <div className="text-right">
                   <p className="text-2xl font-bold text-gray-800">INVOICE</p>
@@ -204,6 +207,11 @@ export default function InvoicesPage({ invoices, setInvoices, orders, customers,
               <div className="flex justify-between items-center pt-4 border-t">
                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusColors[showPreview.status]}`}>{showPreview.status}</span>
               </div>
+              {settings.receiptFooter && (
+                <div className="mt-6 pt-4 border-t text-center">
+                  <p className="text-sm text-gray-500 italic">{settings.receiptFooter}</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

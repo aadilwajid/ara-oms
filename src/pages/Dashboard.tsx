@@ -1,5 +1,5 @@
 import { Order, Customer, Product, Expense, Income, BusinessSettings } from '../types';
-import { ShoppingCart, Users, Package, TrendingUp, TrendingDown, DollarSign, AlertTriangle, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { ShoppingCart, Users, Package, TrendingUp, TrendingDown, AlertTriangle, ArrowUpRight } from 'lucide-react';
 
 interface Props {
   orders: Order[];
@@ -48,7 +48,7 @@ export default function Dashboard({ orders, customers, products, expenses, incom
               <p className="text-2xl font-bold text-gray-800">{settings.currency} {totalRevenue.toLocaleString()}</p>
             </div>
             <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-green-600" />
+              <span className="text-xl">💰</span>
             </div>
           </div>
           <div className="flex items-center mt-2 text-sm text-green-600">
@@ -119,6 +119,19 @@ export default function Dashboard({ orders, customers, products, expenses, incom
                   <div>
                     <p className="font-medium text-gray-800">{order.orderNumber}</p>
                     <p className="text-sm text-gray-500">{order.customerName}</p>
+                    {/* Show product thumbnails */}
+                    <div className="flex items-center gap-1 mt-1">
+                      {order.items.slice(0, 4).map((item, i) => (
+                        <div key={i} className="w-6 h-6 rounded bg-gray-100 overflow-hidden border flex items-center justify-center" title={item.productName}>
+                          {item.image ? (
+                            <img src={item.image} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-[10px] text-gray-400">{item.productName[0]}</span>
+                          )}
+                        </div>
+                      ))}
+                      {order.items.length > 4 && <span className="text-xs text-gray-400">+{order.items.length - 4}</span>}
+                    </div>
                   </div>
                 </div>
                 <div className="text-right">
@@ -149,7 +162,12 @@ export default function Dashboard({ orders, customers, products, expenses, incom
                     <span>{channelIcons[channel] || '📦'}</span>
                     <span className="text-sm capitalize text-gray-700">{channel}</span>
                   </div>
-                  <span className="text-sm font-medium text-gray-800">{count} orders</span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-16 h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${(count / orders.length) * 100}%` }} />
+                    </div>
+                    <span className="text-sm font-medium text-gray-800 w-6 text-right">{count}</span>
+                  </div>
                 </div>
               ))}
               {Object.keys(channelStats).length === 0 && (
@@ -166,10 +184,13 @@ export default function Dashboard({ orders, customers, products, expenses, incom
                 <h3 className="font-semibold text-amber-800">Low Stock Alert</h3>
               </div>
               <div className="p-4 space-y-2">
-                {lowStockProducts.map(p => (
-                  <div key={p.id} className="flex items-center justify-between">
-                    <span className="text-sm text-gray-700">{p.name}</span>
-                    <span className="text-sm font-medium text-amber-700">{p.stock} left</span>
+                {lowStockProducts.slice(0, 5).map(p => (
+                  <div key={p.id} className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      {p.image && <img src={p.image} alt="" className="w-6 h-6 rounded object-cover shrink-0" />}
+                      <span className="text-sm text-gray-700 truncate">{p.name}</span>
+                    </div>
+                    <span className="text-sm font-medium text-amber-700 shrink-0">{p.stock} left</span>
                   </div>
                 ))}
               </div>
