@@ -53,7 +53,16 @@ function App() {
   useEffect(() => { saveToStorage('oms_media', media); }, [media]);
   useEffect(() => { saveToStorage('oms_activity_log', activityLog); }, [activityLog]);
   useEffect(() => { saveToStorage('oms_settings', settings); }, [settings]);
-  useEffect(() => { saveToStorage('oms_dark_mode', darkMode); }, [darkMode]);
+  
+  // Dark mode effect - apply to document element
+  useEffect(() => {
+    saveToStorage('oms_dark_mode', darkMode);
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
 
   // Toast notification system
   const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'success') => {
@@ -174,7 +183,7 @@ function App() {
     switch (currentPage) {
       case 'dashboard': return <Dashboard orders={orders} customers={customers} products={products} expenses={expenses} income={income} settings={settings} />;
       case 'orders': return <OrdersPage orders={orders} setOrders={setOrders} customers={customers} products={products} settings={settings} media={media} showToast={showToast} logActivity={logActivity} />;
-      case 'customers': return <CustomersPage customers={customers} setCustomers={setCustomers} />;
+      case 'customers': return <CustomersPage customers={customers} setCustomers={setCustomers} settings={settings} />;
       case 'products': return <ProductsPage products={products} setProducts={setProducts} media={media} />;
       case 'inventory': return <InventoryPage products={products} setProducts={setProducts} settings={settings} />;
       case 'invoices': return <InvoicesPage invoices={invoices} setInvoices={setInvoices} orders={orders} customers={customers} settings={settings} />;
@@ -250,13 +259,6 @@ function App() {
           </button>
           <h2 className="text-xl font-semibold text-gray-800 capitalize">{currentPage}</h2>
           <div className="ml-auto flex items-center gap-3">
-            {/* Quick Actions Button */}
-            <QuickActions
-              onNewOrder={() => { setCurrentPage('orders'); window.dispatchEvent(new CustomEvent('oms:newOrder')); }}
-              onNewProduct={() => { setCurrentPage('products'); window.dispatchEvent(new CustomEvent('oms:newProduct')); }}
-              onNewCustomer={() => { setCurrentPage('customers'); window.dispatchEvent(new CustomEvent('oms:newCustomer')); }}
-            />
-
             {/* Notifications */}
             <div className="relative">
               <button onClick={() => setShowNotifications(!showNotifications)} className="relative p-2 hover:bg-gray-100 rounded-lg">
@@ -340,6 +342,15 @@ function App() {
           {renderPage()}
         </div>
       </main>
+
+      {/* Floating Action Button - Fixed Bottom Right */}
+      <div className="fixed bottom-6 right-6 z-40">
+        <QuickActions
+          onNewOrder={() => { setCurrentPage('orders'); window.dispatchEvent(new CustomEvent('oms:newOrder')); }}
+          onNewProduct={() => { setCurrentPage('products'); window.dispatchEvent(new CustomEvent('oms:newProduct')); }}
+          onNewCustomer={() => { setCurrentPage('customers'); window.dispatchEvent(new CustomEvent('oms:newCustomer')); }}
+        />
+      </div>
 
       {/* Toast Notifications */}
       <Toast toasts={toasts} />

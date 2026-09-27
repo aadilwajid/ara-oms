@@ -1,10 +1,15 @@
 import { useState } from 'react';
-import { Customer } from '../types';
-import { Plus, Search, Edit2, Trash2, X, Phone, Mail, MapPin } from 'lucide-react';
+import { Customer, BusinessSettings } from '../types';
+import { Plus, Search, Edit2, Trash2, X, Phone, Mail, MapPin, MessageCircle, Gift } from 'lucide-react';
+import { sendWhatsAppMessage, generateCustomerGreetingMessage, generatePromotionalMessage } from '../utils/whatsapp';
 
-interface Props { customers: Customer[]; setCustomers: React.Dispatch<React.SetStateAction<Customer[]>>; }
+interface Props { 
+  customers: Customer[]; 
+  setCustomers: React.Dispatch<React.SetStateAction<Customer[]>>;
+  settings?: BusinessSettings;
+}
 
-export default function CustomersPage({ customers, setCustomers }: Props) {
+export default function CustomersPage({ customers, setCustomers, settings }: Props) {
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<Customer | null>(null);
@@ -57,6 +62,21 @@ export default function CustomersPage({ customers, setCustomers }: Props) {
                 </div>
               </div>
               <div className="flex gap-1">
+                <button onClick={() => {
+                  if (settings) {
+                    const message = generateCustomerGreetingMessage(c, settings);
+                    sendWhatsAppMessage(c.phone, message);
+                  }
+                }} className="p-1.5 hover:bg-gray-100 rounded" title="Send Greeting via WhatsApp"><MessageCircle className="w-3.5 h-3.5 text-green-500" /></button>
+                <button onClick={() => {
+                  if (settings) {
+                    const offer = prompt('Enter promotional offer message:');
+                    if (offer) {
+                      const message = generatePromotionalMessage(c, settings, offer);
+                      sendWhatsAppMessage(c.phone, message);
+                    }
+                  }
+                }} className="p-1.5 hover:bg-gray-100 rounded" title="Send Promotion"><Gift className="w-3.5 h-3.5 text-purple-500" /></button>
                 <button onClick={() => openEdit(c)} className="p-1.5 hover:bg-gray-100 rounded"><Edit2 className="w-3.5 h-3.5 text-blue-500" /></button>
                 <button onClick={() => handleDelete(c.id)} className="p-1.5 hover:bg-gray-100 rounded"><Trash2 className="w-3.5 h-3.5 text-red-500" /></button>
               </div>
