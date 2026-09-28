@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Invoice, Order, Customer, BusinessSettings } from '../types';
-import { Plus, Search, Eye, Trash2, X, Printer } from 'lucide-react';
+import { Plus, Search, Eye, Trash2, X, Printer, Download, MessageCircle } from 'lucide-react';
+import { generateInvoicePDF } from '../utils/pdfGenerator';
+import { sendWhatsAppMessage, generatePaymentReminderMessage } from '../utils/whatsapp';
 
 interface Props {
   invoices: Invoice[];
@@ -122,8 +124,22 @@ export default function InvoicesPage({ invoices, setInvoices, orders, customers,
                   <td className="px-4 py-3 text-gray-500">{inv.createdAt}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-center gap-1">
-                      <button onClick={() => setShowPreview(inv)} className="p-1.5 hover:bg-gray-100 rounded"><Eye className="w-4 h-4 text-gray-500" /></button>
-                      <button onClick={() => handleDelete(inv.id)} className="p-1.5 hover:bg-gray-100 rounded"><Trash2 className="w-4 h-4 text-red-500" /></button>
+                      <button onClick={() => setShowPreview(inv)} className="p-1.5 hover:bg-gray-100 rounded" title="View"><Eye className="w-4 h-4 text-gray-500" /></button>
+                      <button onClick={() => {
+                        const order = orders.find(o => o.id === inv.orderId);
+                        generateInvoicePDF(inv, order, settings);
+                      }} className="p-1.5 hover:bg-gray-100 rounded" title="Download PDF"><Download className="w-4 h-4 text-blue-500" /></button>
+                      <button onClick={() => {
+                        const customer = customers.find(c => c.id === inv.customerId);
+                        if (customer) {
+                          const order = orders.find(o => o.id === inv.orderId);
+                          const message = order 
+                            ? generatePaymentReminderMessage(order, settings)
+                            : `Payment reminder for invoice ${inv.invoiceNumber}. Amount: ${settings.currency} ${inv.amount.toLocaleString()}. Due: ${inv.dueDate}`;
+                          sendWhatsAppMessage(customer.phone, message);
+                        }
+                      }} className="p-1.5 hover:bg-gray-100 rounded" title="Send via WhatsApp"><MessageCircle className="w-4 h-4 text-green-500" /></button>
+                      <button onClick={() => handleDelete(inv.id)} className="p-1.5 hover:bg-gray-100 rounded" title="Delete"><Trash2 className="w-4 h-4 text-red-500" /></button>
                     </div>
                   </td>
                 </tr>

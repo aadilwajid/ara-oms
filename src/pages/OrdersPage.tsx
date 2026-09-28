@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Order, OrderChannel, OrderStatus, PaymentStatus, Customer, Product, BusinessSettings, OrderItem, MediaItem } from '../types';
-import { Plus, Search, Eye, Edit2, Trash2, X, Image as ImageIcon } from 'lucide-react';
+import { Plus, Search, Eye, Edit2, Trash2, X, Image as ImageIcon, MessageCircle } from 'lucide-react';
 import MediaPage from './MediaPage';
-
-import { ActivityLog } from '../types';
+import { sendWhatsAppMessage, generateOrderConfirmationMessage, generateOrderStatusMessage, generateDeliveryConfirmationMessage } from '../utils/whatsapp';
 
 interface Props {
   orders: Order[];
@@ -216,9 +215,16 @@ export default function OrdersPage({ orders, setOrders, customers, products, set
                   <td className="px-4 py-3 text-gray-500">{order.createdAt}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-center gap-1">
-                      <button onClick={() => setShowDetail(order)} className="p-1.5 hover:bg-gray-100 rounded"><Eye className="w-4 h-4 text-gray-500" /></button>
-                      <button onClick={() => openEdit(order)} className="p-1.5 hover:bg-gray-100 rounded"><Edit2 className="w-4 h-4 text-blue-500" /></button>
-                      <button onClick={() => handleDelete(order.id)} className="p-1.5 hover:bg-gray-100 rounded"><Trash2 className="w-4 h-4 text-red-500" /></button>
+                      <button onClick={() => setShowDetail(order)} className="p-1.5 hover:bg-gray-100 rounded" title="View"><Eye className="w-4 h-4 text-gray-500" /></button>
+                      <button onClick={() => {
+                        const customer = customers.find(c => c.id === order.customerId);
+                        if (customer) {
+                          const message = generateOrderConfirmationMessage(order, settings);
+                          sendWhatsAppMessage(customer.phone, message);
+                        }
+                      }} className="p-1.5 hover:bg-gray-100 rounded" title="Send Confirmation via WhatsApp"><MessageCircle className="w-4 h-4 text-green-500" /></button>
+                      <button onClick={() => openEdit(order)} className="p-1.5 hover:bg-gray-100 rounded" title="Edit"><Edit2 className="w-4 h-4 text-blue-500" /></button>
+                      <button onClick={() => handleDelete(order.id)} className="p-1.5 hover:bg-gray-100 rounded" title="Delete"><Trash2 className="w-4 h-4 text-red-500" /></button>
                     </div>
                   </td>
                 </tr>
@@ -235,7 +241,37 @@ export default function OrdersPage({ orders, setOrders, customers, products, set
           <div className="bg-white rounded-xl max-w-lg w-full max-h-[90vh] overflow-auto" onClick={e => e.stopPropagation()}>
             <div className="p-5 border-b flex items-center justify-between">
               <h3 className="text-lg font-semibold">{showDetail.orderNumber}</h3>
-              <button onClick={() => setShowDetail(null)}><X className="w-5 h-5" /></button>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => {
+                    const customer = customers.find(c => c.id === showDetail.customerId);
+                    if (customer) {
+                      const message = generateOrderStatusMessage(showDetail, settings);
+                      sendWhatsAppMessage(customer.phone, message);
+                    }
+                  }} 
+                  className="p-2 hover:bg-green-50 rounded-lg" 
+                  title="Send Status Update via WhatsApp"
+                >
+                  <MessageCircle className="w-5 h-5 text-green-500" />
+                </button>
+                {showDetail.status === 'delivered' && (
+                  <button 
+                    onClick={() => {
+                      const customer = customers.find(c => c.id === showDetail.customerId);
+                      if (customer) {
+                        const message = generateDeliveryConfirmationMessage(showDetail, settings);
+                        sendWhatsAppMessage(customer.phone, message);
+                      }
+                    }} 
+                    className="px-3 py-1.5 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600"
+                    title="Send Delivery Confirmation"
+                  >
+                    🎉 Delivered
+                  </button>
+                )}
+                <button onClick={() => setShowDetail(null)}><X className="w-5 h-5" /></button>
+              </div>
             </div>
             <div className="p-5 space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">

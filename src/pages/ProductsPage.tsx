@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Product, MediaItem } from '../types';
-import { Plus, Search, Edit2, Trash2, X, Package, Image as ImageIcon } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, X, Package, Image as ImageIcon, Upload, Download } from 'lucide-react';
 import MediaPage from './MediaPage';
+import { importProducts, generateProductCSV, downloadCSV } from '../utils/csvImport';
 
 interface Props { products: Product[]; setProducts: React.Dispatch<React.SetStateAction<Product[]>>; media: MediaItem[]; }
 
@@ -47,6 +48,41 @@ export default function ProductsPage({ products, setProducts, media }: Props) {
           <option value="all">All Categories</option>
           {categories.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
+        <button onClick={() => downloadCSV(generateProductCSV(products), 'products.csv')} className="border px-3 py-2 rounded-lg text-sm hover:bg-gray-50 flex items-center gap-1" title="Export as CSV">
+          <Download className="w-4 h-4" /> Export
+        </button>
+        <label className="border px-3 py-2 rounded-lg text-sm hover:bg-gray-50 flex items-center gap-1 cursor-pointer" title="Import from CSV">
+          <Upload className="w-4 h-4" /> Import
+          <input type="file" accept=".csv" className="hidden" onChange={e => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+              const csv = ev.target?.result as string;
+              const imported = importProducts(csv);
+              if (imported.length > 0) {
+                const newProducts = imported.map(p => ({
+                  id: Date.now().toString() + Math.random(),
+                  name: p.name || '',
+                  sku: p.sku || '',
+                  category: p.category || '',
+                  price: p.price || 0,
+                  costPrice: p.costPrice || 0,
+                  stock: p.stock || 0,
+                  lowStockThreshold: p.lowStockThreshold || 10,
+                  description: p.description || '',
+                  createdAt: new Date().toISOString().split('T')[0],
+                }));
+                setProducts(prev => [...newProducts as Product[], ...prev]);
+                alert(`Successfully imported ${imported.length} products`);
+              } else {
+                alert('No valid products found in CSV');
+              }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+          }} />
+        </label>
         <button onClick={openNew} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-700 flex items-center gap-2">
           <Plus className="w-4 h-4" /> Add Product
         </button>

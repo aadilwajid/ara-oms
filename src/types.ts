@@ -135,4 +135,44 @@ export interface ActivityLog {
   user: string;
 }
 
-export type Page = 'dashboard' | 'orders' | 'customers' | 'products' | 'inventory' | 'invoices' | 'expenses' | 'income' | 'media' | 'settings';
+export interface DiscountCode {
+  id: string;
+  code: string;
+  type: 'percentage' | 'fixed';
+  value: number;
+  minOrderAmount: number;
+  maxUses: number;
+  usedCount: number;
+  expiresAt: string;
+  active: boolean;
+  createdAt: string;
+}
+
+export interface Supplier {
+  id: string;
+  name: string;
+  contact: string;
+  email: string;
+  phone: string;
+  address: string;
+  products: string[];
+  notes: string;
+  createdAt: string;
+}
+
+export interface ReturnRequest {
+  id: string;
+  rmaNumber: string;
+  orderId: string;
+  customerId: string;
+  customerName: string;
+  items: { productId: string; productName: string; quantity: number; reason: string }[];
+  status: 'requested' | 'approved' | 'received' | 'refunded' | 'rejected';
+  refundAmount: number;
+  reason: string;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type Page = 'dashboard' | 'orders' | 'customers' | 'products' | 'inventory' | 'invoices' | 'expenses' | 'income' | 'media' | 'reports' | 'returns' | 'settings';

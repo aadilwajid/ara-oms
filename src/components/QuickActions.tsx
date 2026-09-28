@@ -18,9 +18,9 @@ export default function QuickActions({ onNewOrder, onNewProduct, onNewCustomer }
 
   return (
     <div className="relative">
-      {/* Action Buttons */}
+      {/* Action Buttons - Expand Upward */}
       {isOpen && (
-        <div className="absolute right-0 bottom-12 space-y-2 animate-fade-in">
+        <div className="absolute bottom-16 right-0 space-y-3 animate-fade-in">
           {actions.map((action, idx) => (
             <button
               key={idx}
@@ -28,10 +28,10 @@ export default function QuickActions({ onNewOrder, onNewProduct, onNewCustomer }
                 action.onClick();
                 setIsOpen(false);
               }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-white shadow-lg transition-all hover:scale-105 ${action.color}`}
+              className={`flex items-center gap-3 px-5 py-3 rounded-full text-white shadow-xl transition-all hover:scale-110 min-w-[180px] justify-start ${action.color}`}
               style={{ animationDelay: `${idx * 50}ms` }}
             >
-              <action.icon className="w-4 h-4" />
+              <action.icon className="w-5 h-5" />
               <span className="text-sm font-medium whitespace-nowrap">{action.label}</span>
             </button>
           ))}
@@ -41,11 +41,11 @@ export default function QuickActions({ onNewOrder, onNewProduct, onNewCustomer }
       {/* Main FAB Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center justify-center w-10 h-10 rounded-full shadow-lg transition-all hover:scale-110 ${
-          isOpen ? 'bg-gray-600 rotate-45' : 'bg-emerald-600 hover:bg-emerald-700'
+        className={`flex items-center justify-center w-14 h-14 rounded-full shadow-2xl transition-all hover:scale-110 ${
+          isOpen ? 'bg-gray-700 rotate-45' : 'bg-emerald-600 hover:bg-emerald-700'
         }`}
       >
-        {isOpen ? <X className="w-5 h-5 text-white" /> : <Plus className="w-5 h-5 text-white" />}
+        {isOpen ? <X className="w-7 h-7 text-white" /> : <Plus className="w-7 h-7 text-white" />}
       </button>
     </div>
   );
