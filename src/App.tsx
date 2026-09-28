@@ -12,8 +12,12 @@ import IncomePage from './pages/IncomePage';
 import MediaPage from './pages/MediaPage';
 import ReportsPage from './pages/ReportsPage';
 import ReturnsPage from './pages/ReturnsPage';
+import AdvancedInventoryPage from './pages/AdvancedInventoryPage';
+import SuppliersPage from './pages/SuppliersPage';
+import PromotionsPage from './pages/PromotionsPage';
+import MarketingPage from './pages/MarketingPage';
 import SettingsPage from './pages/SettingsPage';
-import { LayoutDashboard, ShoppingCart, Users, Package, Warehouse, FileText, TrendingDown, TrendingUp, Settings, Menu, X, Store, Image as ImageIcon, Plus, Download, Moon, Sun, Bell, BarChart3, RotateCcw } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Users, Package, Warehouse, FileText, TrendingDown, TrendingUp, Settings, Menu, X, Store, Image as ImageIcon, Plus, Download, Moon, Sun, Bell, BarChart3, RotateCcw, Boxes, Truck, Award } from 'lucide-react';
 import Toast from './components/Toast';
 import QuickActions from './components/QuickActions';
 import AuditLog from './components/AuditLog';
@@ -179,6 +183,10 @@ function App() {
     { id: 'customers' as Page, label: 'Customers', icon: Users },
     { id: 'products' as Page, label: 'Products', icon: Package },
     { id: 'inventory' as Page, label: 'Inventory', icon: Warehouse },
+    { id: 'advanced-inventory' as Page, label: 'Advanced Inventory', icon: Boxes },
+    { id: 'suppliers' as Page, label: 'Suppliers & PO', icon: Truck },
+    { id: 'promotions' as Page, label: 'Promotions', icon: Award },
+    { id: 'marketing' as Page, label: 'Marketing & CRM', icon: Users },
     { id: 'media' as Page, label: 'Media', icon: ImageIcon },
     { id: 'invoices' as Page, label: 'Invoices', icon: FileText },
     { id: 'reports' as Page, label: 'Reports', icon: BarChart3 },
@@ -195,6 +203,10 @@ function App() {
       case 'customers': return <CustomersPage customers={customers} setCustomers={setCustomers} settings={settings} />;
       case 'products': return <ProductsPage products={products} setProducts={setProducts} media={media} />;
       case 'inventory': return <InventoryPage products={products} setProducts={setProducts} settings={settings} />;
+      case 'advanced-inventory': return <AdvancedInventoryPage products={products} setProducts={setProducts} settings={settings} />;
+      case 'suppliers': return <SuppliersPage settings={settings} />;
+      case 'promotions': return <PromotionsPage settings={settings} />;
+      case 'marketing': return <MarketingPage settings={settings} />;
       case 'invoices': return <InvoicesPage invoices={invoices} setInvoices={setInvoices} orders={orders} customers={customers} settings={settings} />;
       case 'expenses': return <ExpensesPage expenses={expenses} setExpenses={setExpenses} />;
       case 'income': return <IncomePage income={income} setIncome={setIncome} />;
