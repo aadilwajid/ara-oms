@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Page, Product, Customer, Order, Invoice, Expense, Income, BusinessSettings, MediaItem, ActivityLog } from './types';
+import { Page, Product, Customer, Order, Invoice, Expense, Income, BusinessSettings, MediaItem, ActivityLog, ReturnRequest } from './types';
 import { loadFromStorage, saveToStorage, defaultSettings, defaultProducts, defaultCustomers, defaultOrders, defaultInvoices, defaultExpenses, defaultIncome, defaultMedia, defaultActivityLog } from './store';
 import Dashboard from './pages/Dashboard';
 import OrdersPage from './pages/OrdersPage';
@@ -10,10 +10,14 @@ import InvoicesPage from './pages/InvoicesPage';
 import ExpensesPage from './pages/ExpensesPage';
 import IncomePage from './pages/IncomePage';
 import MediaPage from './pages/MediaPage';
+import ReportsPage from './pages/ReportsPage';
+import ReturnsPage from './pages/ReturnsPage';
 import SettingsPage from './pages/SettingsPage';
-import { LayoutDashboard, ShoppingCart, Users, Package, Warehouse, FileText, TrendingDown, TrendingUp, Settings, Menu, X, Store, Image as ImageIcon, Plus, Download, Moon, Sun, Bell } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Users, Package, Warehouse, FileText, TrendingDown, TrendingUp, Settings, Menu, X, Store, Image as ImageIcon, Plus, Download, Moon, Sun, Bell, BarChart3, RotateCcw } from 'lucide-react';
 import Toast from './components/Toast';
 import QuickActions from './components/QuickActions';
+import AuditLog from './components/AuditLog';
+import GlobalSearch from './components/GlobalSearch';
 
 function App() {
   const [currentPage, setCurrentPage] = useState<Page>('dashboard');
@@ -27,6 +31,7 @@ function App() {
   const [income, setIncome] = useState<Income[]>([]);
   const [media, setMedia] = useState<MediaItem[]>([]);
   const [activityLog, setActivityLog] = useState<ActivityLog[]>([]);
+  const [returns, setReturns] = useState<ReturnRequest[]>([]);
   const [settings, setSettings] = useState<BusinessSettings>(defaultSettings);
   const [toasts, setToasts] = useState<Array<{ id: string; message: string; type: 'success' | 'error' | 'info' }>>([]);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -40,6 +45,7 @@ function App() {
     setIncome(loadFromStorage('oms_income', defaultIncome));
     setMedia(loadFromStorage('oms_media', defaultMedia));
     setActivityLog(loadFromStorage('oms_activity_log', defaultActivityLog));
+    setReturns(loadFromStorage('oms_returns', []));
     setSettings(loadFromStorage('oms_settings', defaultSettings));
     setDarkMode(loadFromStorage('oms_dark_mode', false));
   }, []);
@@ -51,6 +57,7 @@ function App() {
   useEffect(() => { saveToStorage('oms_expenses', expenses); }, [expenses]);
   useEffect(() => { saveToStorage('oms_income', income); }, [income]);
   useEffect(() => { saveToStorage('oms_media', media); }, [media]);
+  useEffect(() => { saveToStorage('oms_returns', returns); }, [returns]);
   useEffect(() => { saveToStorage('oms_activity_log', activityLog); }, [activityLog]);
   useEffect(() => { saveToStorage('oms_settings', settings); }, [settings]);
   
@@ -174,6 +181,8 @@ function App() {
     { id: 'inventory' as Page, label: 'Inventory', icon: Warehouse },
     { id: 'media' as Page, label: 'Media', icon: ImageIcon },
     { id: 'invoices' as Page, label: 'Invoices', icon: FileText },
+    { id: 'reports' as Page, label: 'Reports', icon: BarChart3 },
+    { id: 'returns' as Page, label: 'Returns', icon: RotateCcw },
     { id: 'expenses' as Page, label: 'Expenses', icon: TrendingDown },
     { id: 'income' as Page, label: 'Income', icon: TrendingUp },
     { id: 'settings' as Page, label: 'Settings', icon: Settings },
@@ -190,7 +199,9 @@ function App() {
       case 'expenses': return <ExpensesPage expenses={expenses} setExpenses={setExpenses} />;
       case 'income': return <IncomePage income={income} setIncome={setIncome} />;
       case 'media': return <MediaPage media={media} setMedia={setMedia} />;
-      case 'settings': return <SettingsPage settings={settings} setSettings={setSettings} media={media} />;
+      case 'reports': return <ReportsPage orders={orders} customers={customers} products={products} expenses={expenses} income={income} settings={settings} />;
+      case 'returns': return <ReturnsPage returns={returns} setReturns={setReturns} orders={orders} customers={customers} settings={settings} />;
+      case 'settings': return <SettingsPage settings={settings} setSettings={setSettings} media={media} activityLog={activityLog} />;
       default: return <Dashboard orders={orders} customers={customers} products={products} expenses={expenses} income={income} settings={settings} />;
     }
   };
@@ -351,6 +362,15 @@ function App() {
           onNewCustomer={() => { setCurrentPage('customers'); window.dispatchEvent(new CustomEvent('oms:newCustomer')); }}
         />
       </div>
+
+      {/* Global Search */}
+      <GlobalSearch
+        orders={orders}
+        customers={customers}
+        products={products}
+        invoices={invoices}
+        onNavigate={(page) => setCurrentPage(page as Page)}
+      />
 
       {/* Toast Notifications */}
       <Toast toasts={toasts} />

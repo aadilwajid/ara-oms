@@ -4,9 +4,12 @@ import { compressImage } from '../store';
 import { Save, Store, MapPin, Receipt, AlertTriangle, Image as ImageIcon, X, Camera } from 'lucide-react';
 import MediaPage from './MediaPage';
 
-interface Props { settings: BusinessSettings; setSettings: React.Dispatch<React.SetStateAction<BusinessSettings>>; media: MediaItem[]; }
+import { ActivityLog } from '../types';
+import AuditLog from '../components/AuditLog';
 
-export default function SettingsPage({ settings, setSettings, media }: Props) {
+interface Props { settings: BusinessSettings; setSettings: React.Dispatch<React.SetStateAction<BusinessSettings>>; media: MediaItem[]; activityLog?: ActivityLog[]; }
+
+export default function SettingsPage({ settings, setSettings, media, activityLog = [] }: Props) {
   const [form, setForm] = useState<BusinessSettings>({ ...settings });
   const [saved, setSaved] = useState(false);
   const [showLogoPicker, setShowLogoPicker] = useState(false);
@@ -268,6 +271,11 @@ export default function SettingsPage({ settings, setSettings, media }: Props) {
           </div>
         </div>
       </div>
+
+      {/* Audit Log */}
+      {activityLog && activityLog.length > 0 && (
+        <AuditLog activityLog={activityLog} />
+      )}
 
       {/* Logo Picker from Media */}
       {showLogoPicker && (
