@@ -16,8 +16,9 @@ import AdvancedInventoryPage from './pages/AdvancedInventoryPage';
 import SuppliersPage from './pages/SuppliersPage';
 import PromotionsPage from './pages/PromotionsPage';
 import MarketingPage from './pages/MarketingPage';
+import QuotationsPage from './pages/QuotationsPage';
 import SettingsPage from './pages/SettingsPage';
-import { LayoutDashboard, ShoppingCart, Users, Package, Warehouse, FileText, TrendingDown, TrendingUp, Settings, Menu, X, Store, Image as ImageIcon, Plus, Download, Moon, Sun, Bell, BarChart3, RotateCcw, Boxes, Truck, Award } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Users, Package, Warehouse, FileText, TrendingDown, TrendingUp, Settings, Menu, X, Store, Image as ImageIcon, Plus, Download, Moon, Sun, Bell, BarChart3, RotateCcw, Boxes, Truck, Award, FileSignature } from 'lucide-react';
 import Toast from './components/Toast';
 import QuickActions from './components/QuickActions';
 import AuditLog from './components/AuditLog';
@@ -189,6 +190,7 @@ function App() {
     { id: 'marketing' as Page, label: 'Marketing & CRM', icon: Users },
     { id: 'media' as Page, label: 'Media', icon: ImageIcon },
     { id: 'invoices' as Page, label: 'Invoices', icon: FileText },
+    { id: 'quotations' as Page, label: 'Quotations', icon: FileSignature },
     { id: 'reports' as Page, label: 'Reports', icon: BarChart3 },
     { id: 'returns' as Page, label: 'Returns', icon: RotateCcw },
     { id: 'expenses' as Page, label: 'Expenses', icon: TrendingDown },
@@ -208,6 +210,7 @@ function App() {
       case 'promotions': return <PromotionsPage settings={settings} />;
       case 'marketing': return <MarketingPage settings={settings} />;
       case 'invoices': return <InvoicesPage invoices={invoices} setInvoices={setInvoices} orders={orders} customers={customers} settings={settings} />;
+      case 'quotations': return <QuotationsPage products={products} customers={customers} settings={settings} />;
       case 'expenses': return <ExpensesPage expenses={expenses} setExpenses={setExpenses} />;
       case 'income': return <IncomePage income={income} setIncome={setIncome} />;
       case 'media': return <MediaPage media={media} setMedia={setMedia} />;
