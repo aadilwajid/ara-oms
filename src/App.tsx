@@ -17,8 +17,13 @@ import SuppliersPage from './pages/SuppliersPage';
 import PromotionsPage from './pages/PromotionsPage';
 import MarketingPage from './pages/MarketingPage';
 import QuotationsPage from './pages/QuotationsPage';
+import TeamManagementPage from './pages/TeamManagementPage';
+import CustomerExperiencePage from './pages/CustomerExperiencePage';
+import AdvancedAnalyticsPage from './pages/AdvancedAnalyticsPage';
+import MarketingAutomationPage from './pages/MarketingAutomationPage';
+import FinancialAdvancedPage from './pages/FinancialAdvancedPage';
 import SettingsPage from './pages/SettingsPage';
-import { LayoutDashboard, ShoppingCart, Users, Package, Warehouse, FileText, TrendingDown, TrendingUp, Settings, Menu, X, Store, Image as ImageIcon, Plus, Download, Moon, Sun, Bell, BarChart3, RotateCcw, Boxes, Truck, Award, FileSignature } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Users, Package, Warehouse, FileText, TrendingDown, TrendingUp, Settings, Menu, X, Store, Image as ImageIcon, Plus, Download, Moon, Sun, Bell, BarChart3, RotateCcw, Boxes, Truck, Award, FileSignature, Brain, UserCheck, Heart, DollarSign, Briefcase } from 'lucide-react';
 import Toast from './components/Toast';
 import QuickActions from './components/QuickActions';
 import AuditLog from './components/AuditLog';
@@ -195,6 +200,11 @@ function App() {
     { id: 'returns' as Page, label: 'Returns', icon: RotateCcw },
     { id: 'expenses' as Page, label: 'Expenses', icon: TrendingDown },
     { id: 'income' as Page, label: 'Income', icon: TrendingUp },
+    { id: 'team' as Page, label: 'Team & HR', icon: UserCheck },
+    { id: 'customer-experience' as Page, label: 'Customer Experience', icon: Heart },
+    { id: 'advanced-analytics' as Page, label: 'Advanced Analytics', icon: Brain },
+    { id: 'marketing-automation' as Page, label: 'Marketing Automation', icon: Briefcase },
+    { id: 'financial-advanced' as Page, label: 'Financial Advanced', icon: DollarSign },
     { id: 'settings' as Page, label: 'Settings', icon: Settings },
   ];
 
@@ -216,6 +226,11 @@ function App() {
       case 'media': return <MediaPage media={media} setMedia={setMedia} />;
       case 'reports': return <ReportsPage orders={orders} customers={customers} products={products} expenses={expenses} income={income} settings={settings} />;
       case 'returns': return <ReturnsPage returns={returns} setReturns={setReturns} orders={orders} customers={customers} settings={settings} />;
+      case 'team': return <TeamManagementPage settings={settings} />;
+      case 'customer-experience': return <CustomerExperiencePage customers={customers} products={products} orders={orders} settings={settings} />;
+      case 'advanced-analytics': return <AdvancedAnalyticsPage orders={orders} customers={customers} products={products} settings={settings} />;
+      case 'marketing-automation': return <MarketingAutomationPage settings={settings} customers={customers} />;
+      case 'financial-advanced': return <FinancialAdvancedPage settings={settings} />;
       case 'settings': return <SettingsPage settings={settings} setSettings={setSettings} media={media} activityLog={activityLog} />;
       default: return <Dashboard orders={orders} customers={customers} products={products} expenses={expenses} income={income} settings={settings} />;
     }
