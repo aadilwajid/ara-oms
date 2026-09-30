@@ -175,4 +175,4 @@ export interface ReturnRequest {
   updatedAt: string;
 }
 
-export type Page = 'dashboard' | 'orders' | 'customers' | 'products' | 'inventory' | 'advanced-inventory' | 'suppliers' | 'promotions' | 'marketing' | 'invoices' | 'expenses' | 'income' | 'media' | 'reports' | 'returns' | 'quotations' | 'team' | 'customer-experience' | 'advanced-analytics' | 'marketing-automation' | 'financial-advanced' | 'settings';
+export type Page = 'dashboard' | 'orders' | 'customers' | 'products' | 'inventory' | 'advanced-inventory' | 'suppliers' | 'promotions' | 'marketing' | 'invoices' | 'expenses' | 'income' | 'media' | 'reports' | 'returns' | 'quotations' | 'team' | 'customer-experience' | 'advanced-analytics' | 'marketing-automation' | 'financial-advanced' | 'users' | 'settings';
