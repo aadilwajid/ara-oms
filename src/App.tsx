@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Page, Product, Customer, Order, Invoice, Expense, Income, BusinessSettings, MediaItem, ActivityLog, ReturnRequest } from './types';
 import { loadFromStorage, saveToStorage, defaultSettings, defaultProducts, defaultCustomers, defaultOrders, defaultInvoices, defaultExpenses, defaultIncome, defaultMedia, defaultActivityLog } from './store';
+import { User, hasPageAccess, getRolePermissions, ROLE_PERMISSIONS } from './utils/permissions';
 import Dashboard from './pages/Dashboard';
 import OrdersPage from './pages/OrdersPage';
 import CustomersPage from './pages/CustomersPage';
@@ -22,14 +23,17 @@ import CustomerExperiencePage from './pages/CustomerExperiencePage';
 import AdvancedAnalyticsPage from './pages/AdvancedAnalyticsPage';
 import MarketingAutomationPage from './pages/MarketingAutomationPage';
 import FinancialAdvancedPage from './pages/FinancialAdvancedPage';
+import UserManagementPage from './pages/UserManagementPage';
 import SettingsPage from './pages/SettingsPage';
-import { LayoutDashboard, ShoppingCart, Users, Package, Warehouse, FileText, TrendingDown, TrendingUp, Settings, Menu, X, Store, Image as ImageIcon, Plus, Download, Moon, Sun, Bell, BarChart3, RotateCcw, Boxes, Truck, Award, FileSignature, Brain, UserCheck, Heart, DollarSign, Briefcase } from 'lucide-react';
+import LoginPage from './pages/LoginPage';
+import { LayoutDashboard, ShoppingCart, Users, Package, Warehouse, FileText, TrendingDown, TrendingUp, Settings, Menu, X, Store, Image as ImageIcon, Plus, Download, Moon, Sun, Bell, BarChart3, RotateCcw, Boxes, Truck, Award, FileSignature, Brain, UserCheck, Heart, DollarSign, Briefcase, LogOut, Shield } from 'lucide-react';
 import Toast from './components/Toast';
 import QuickActions from './components/QuickActions';
 import AuditLog from './components/AuditLog';
 import GlobalSearch from './components/GlobalSearch';
 
 function App() {
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [currentPage, setCurrentPage] = useState<Page>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
@@ -47,6 +51,12 @@ function App() {
   const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
+    // Load user session
+    const savedUser = localStorage.getItem('oms_current_user');
+    if (savedUser) {
+      setCurrentUser(JSON.parse(savedUser));
+    }
+
     setProducts(loadFromStorage('oms_products', defaultProducts));
     setCustomers(loadFromStorage('oms_customers', defaultCustomers));
     setOrders(loadFromStorage('oms_orders', defaultOrders));
@@ -183,7 +193,7 @@ function App() {
   const overdueInvoices = invoices.filter(i => i.status === 'sent' && new Date(i.dueDate) < new Date()).length;
   const hasNotifications = pendingOrders > 0 || lowStockProducts > 0 || overdueInvoices > 0;
 
-  const navItems = [
+  const allNavItems = [
     { id: 'dashboard' as Page, label: 'Dashboard', icon: LayoutDashboard },
     { id: 'orders' as Page, label: 'Orders', icon: ShoppingCart },
     { id: 'customers' as Page, label: 'Customers', icon: Users },
@@ -205,8 +215,14 @@ function App() {
     { id: 'advanced-analytics' as Page, label: 'Advanced Analytics', icon: Brain },
     { id: 'marketing-automation' as Page, label: 'Marketing Automation', icon: Briefcase },
     { id: 'financial-advanced' as Page, label: 'Financial Advanced', icon: DollarSign },
+    { id: 'users' as Page, label: 'User Management', icon: Shield },
     { id: 'settings' as Page, label: 'Settings', icon: Settings },
   ];
+
+  // Filter navigation items based on user role
+  const navItems = currentUser
+    ? allNavItems.filter(item => hasPageAccess(currentUser.role, item.id))
+    : [];
 
   const renderPage = () => {
     switch (currentPage) {
@@ -231,10 +247,35 @@ function App() {
       case 'advanced-analytics': return <AdvancedAnalyticsPage orders={orders} customers={customers} products={products} settings={settings} />;
       case 'marketing-automation': return <MarketingAutomationPage settings={settings} customers={customers} />;
       case 'financial-advanced': return <FinancialAdvancedPage settings={settings} />;
+      case 'users': return <UserManagementPage />;
       case 'settings': return <SettingsPage settings={settings} setSettings={setSettings} media={media} activityLog={activityLog} />;
       default: return <Dashboard orders={orders} customers={customers} products={products} expenses={expenses} income={income} settings={settings} />;
     }
   };
+
+  // Handle login
+  const handleLogin = (user: User) => {
+    setCurrentUser(user);
+    localStorage.setItem('oms_current_user', JSON.stringify(user));
+    logActivity('User Login', `${user.name} logged in as ${user.role}`);
+  };
+
+  // Handle logout
+  const handleLogout = () => {
+    if (currentUser) {
+      logActivity('User Logout', `${currentUser.name} logged out`);
+    }
+    setCurrentUser(null);
+    localStorage.removeItem('oms_current_user');
+  };
+
+  // Show login page if not authenticated
+  if (!currentUser) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
+
+  // Get current user role permissions
+  const rolePermissions = getRolePermissions(currentUser.role);
 
   return (
     <div className={`d-flex vh-100 bg-light overflow-hidden ${darkMode ? 'dark' : ''}`}>
@@ -374,12 +415,28 @@ function App() {
             </button>
 
             <span className="text-sm text-gray-500 hidden sm:inline">{settings.currency}</span>
-            <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-white text-sm font-medium overflow-hidden">
-              {settings.logo ? (
-                <img src={settings.logo} alt="" className="w-full h-full object-cover" />
-              ) : (
-                settings.ownerName ? settings.ownerName[0].toUpperCase() : 'A'
-              )}
+            
+            {/* User Profile & Logout */}
+            <div className="flex items-center gap-2">
+              <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg">
+                <div
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-sm"
+                  style={{ backgroundColor: `${rolePermissions.color}20` }}
+                >
+                  {rolePermissions.icon}
+                </div>
+                <div className="text-left">
+                  <p className="text-xs font-medium text-gray-800">{currentUser.name}</p>
+                  <p className="text-xs text-gray-500" style={{ color: rolePermissions.color }}>{rolePermissions.label}</p>
+                </div>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 hover:text-red-600 transition-colors"
+                title="Logout"
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
             </div>
           </div>
         </header>
