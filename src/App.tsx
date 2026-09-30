@@ -278,59 +278,59 @@ function App() {
   const rolePermissions = getRolePermissions(currentUser.role);
 
   return (
-    <div className={`d-flex vh-100 bg-light overflow-hidden ${darkMode ? 'dark' : ''}`}>
+    <div className={`flex h-screen bg-gray-50 overflow-hidden ${darkMode ? 'dark' : ''}`}>
       {/* Mobile overlay */}
       {sidebarOpen && (
-        <div className="position-fixed top-0 start-0 w-100 h-100 bg-black bg-opacity-50 z-40 d-lg-none" onClick={() => setSidebarOpen(false)} />
+        <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
       {/* Sidebar */}
-      <aside className={`position-fixed lg-static top-0 start-0 z-50 w-64 text-white transform transition-transform duration-200 d-flex flex-column ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg-translate-x-0'}`} style={{background: 'linear-gradient(to bottom, #065f46, #064e3b)'}}>
-        <div className="d-flex align-items-center gap-3 px-4 py-3 border-bottom" style={{borderColor: '#047857'}}>
+      <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-64 text-white transform transition-transform duration-200 flex flex-col ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`} style={{background: 'linear-gradient(to bottom, #065f46, #064e3b)'}}>
+        <div className="flex items-center gap-3 px-4 py-3 border-b" style={{borderColor: '#047857'}}>
           {settings.logo ? (
-            <img src={settings.logo} alt="Logo" className="rounded" style={{width: '32px', height: '32px', objectFit: 'cover'}} />
+            <img src={settings.logo} alt="Logo" className="rounded w-8 h-8 object-cover" />
           ) : (
-            <Store style={{width: '32px', height: '32px', color: '#6ee7b7'}} />
+            <Store className="w-8 h-8" style={{color: '#6ee7b7'}} />
           )}
-          <div className="flex-grow-1" style={{minWidth: 0}}>
-            <h1 className="fs-5 fw-bold text-truncate mb-0">{settings.storeName}</h1>
-            <p className="fs-6 mb-0" style={{color: '#6ee7b7', fontSize: '0.75rem'}}>Order Management</p>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-lg font-bold truncate mb-0">{settings.storeName}</h1>
+            <p className="text-xs mb-0" style={{color: '#6ee7b7'}}>Order Management</p>
           </div>
-          <button className="btn btn-link text-white d-lg-none p-0" onClick={() => setSidebarOpen(false)}>
-            <X style={{width: '20px', height: '20px'}} />
+          <button className="lg:hidden text-white p-0 bg-transparent border-0" onClick={() => setSidebarOpen(false)}>
+            <X className="w-5 h-5" />
           </button>
         </div>
-        <nav className="mt-3 px-2 flex-grow-1 overflow-auto">
+        <nav className="mt-3 px-2 flex-1 overflow-auto">
           {navItems.map((item) => (
             <button
               key={item.id}
               onClick={() => { setCurrentPage(item.id); setSidebarOpen(false); }}
-              className={`d-flex align-items-center gap-2 w-100 px-3 py-2 rounded mb-1 text-start transition-colors small border-0 ${
+              className={`flex items-center gap-2 w-full px-3 py-2 rounded mb-1 text-left text-sm transition-colors border-0 ${
                 currentPage === item.id
-                  ? 'text-white fw-medium'
-                  : 'text-white-50 hover-bg-white-10 hover-text-white'
+                  ? 'text-white font-medium'
+                  : 'text-emerald-200 hover:bg-white/10 hover:text-white'
               }`}
               style={{
                 backgroundColor: currentPage === item.id ? '#047857' : 'transparent',
                 color: currentPage === item.id ? '#fff' : '#a7f3d0'
               }}
             >
-              <item.icon style={{width: '20px', height: '20px', flexShrink: 0}} />
+              <item.icon className="w-5 h-5 shrink-0" />
               <span>{item.label}</span>
               {item.id === 'media' && media.length > 0 && (
-                <span className="ms-auto badge rounded-pill" style={{backgroundColor: '#059669', fontSize: '0.7rem'}}>{media.length}</span>
+                <span className="ml-auto px-2 py-0.5 rounded-full text-white" style={{backgroundColor: '#059669', fontSize: '0.7rem'}}>{media.length}</span>
               )}
             </button>
           ))}
         </nav>
-        <div className="p-2 border-top" style={{borderColor: '#047857'}}>
-          <div className="d-flex gap-1">
-            <button onClick={() => exportData('json')} className="btn btn-sm flex-grow-1 d-flex align-items-center justify-content-center gap-1 text-white-50 hover-bg-white-10 hover-text-white" style={{fontSize: '0.75rem'}} title="Export as JSON">
-              <Download style={{width: '16px', height: '16px'}} />
+        <div className="p-2 border-t" style={{borderColor: '#047857'}}>
+          <div className="flex gap-1">
+            <button onClick={() => exportData('json')} className="flex-1 flex items-center justify-center gap-1 px-2 py-2 rounded text-emerald-200 hover:bg-white/10 hover:text-white text-xs transition-colors bg-transparent border-0" title="Export as JSON">
+              <Download className="w-4 h-4" />
               <span>JSON</span>
             </button>
-            <button onClick={() => exportData('csv')} className="btn btn-sm flex-grow-1 d-flex align-items-center justify-content-center gap-1 text-white-50 hover-bg-white-10 hover-text-white" style={{fontSize: '0.75rem'}} title="Export as CSV">
-              <Download style={{width: '16px', height: '16px'}} />
+            <button onClick={() => exportData('csv')} className="flex-1 flex items-center justify-center gap-1 px-2 py-2 rounded text-emerald-200 hover:bg-white/10 hover:text-white text-xs transition-colors bg-transparent border-0" title="Export as CSV">
+              <Download className="w-4 h-4" />
               <span>CSV</span>
             </button>
           </div>
@@ -338,19 +338,19 @@ function App() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-grow-1 overflow-auto">
-        <header className="bg-white border-bottom px-3 px-lg-4 py-3 d-flex align-items-center gap-3 position-sticky top-0 z-30">
-          <button className="btn btn-link d-lg-none p-0" onClick={() => setSidebarOpen(true)}>
-            <Menu style={{width: '24px', height: '24px', color: '#4b5563'}} />
+      <main className="flex-1 overflow-auto">
+        <header className="bg-white border-b px-3 lg:px-4 py-3 flex items-center gap-3 sticky top-0 z-30">
+          <button className="lg:hidden p-0 bg-transparent border-0" onClick={() => setSidebarOpen(true)}>
+            <Menu className="w-6 h-6 text-gray-600" />
           </button>
-          <h2 className="fs-4 fw-semibold text-dark text-capitalize mb-0">{currentPage}</h2>
-          <div className="ms-auto d-flex align-items-center gap-2">
+          <h2 className="text-xl font-semibold text-gray-800 capitalize mb-0">{currentPage}</h2>
+          <div className="ml-auto flex items-center gap-2">
             {/* Notifications */}
-            <div className="position-relative">
-              <button onClick={() => setShowNotifications(!showNotifications)} className="btn btn-link position-relative p-2 hover-bg-light rounded">
-                <Bell style={{width: '20px', height: '20px', color: '#4b5563'}} />
+            <div className="relative">
+              <button onClick={() => setShowNotifications(!showNotifications)} className="relative p-2 hover:bg-gray-100 rounded bg-transparent border-0">
+                <Bell className="w-5 h-5 text-gray-600" />
                 {hasNotifications && (
-                  <span className="position-absolute top-0 end-0 badge rounded-pill bg-danger" style={{width: '8px', height: '8px', padding: 0}} />
+                  <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full" />
                 )}
               </button>
               {showNotifications && (
