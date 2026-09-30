@@ -23,10 +23,17 @@ import CustomerExperiencePage from './pages/CustomerExperiencePage';
 import AdvancedAnalyticsPage from './pages/AdvancedAnalyticsPage';
 import MarketingAutomationPage from './pages/MarketingAutomationPage';
 import FinancialAdvancedPage from './pages/FinancialAdvancedPage';
+import CommunicationHubPage from './pages/CommunicationHubPage';
+import MultiStorePage from './pages/MultiStorePage';
+import CustomerPortalPage from './pages/CustomerPortalPage';
+import AdvancedWorkflowsPage from './pages/AdvancedWorkflowsPage';
+import RealTimeAnalyticsPage from './pages/RealTimeAnalyticsPage';
+import SocialCommercePage from './pages/SocialCommercePage';
+import AdvancedCommercePage from './pages/AdvancedCommercePage';
 import UserManagementPage from './pages/UserManagementPage';
 import SettingsPage from './pages/SettingsPage';
 import LoginPage from './pages/LoginPage';
-import { LayoutDashboard, ShoppingCart, Users, Package, Warehouse, FileText, TrendingDown, TrendingUp, Settings, Menu, X, Store, Image as ImageIcon, Plus, Download, Moon, Sun, Bell, BarChart3, RotateCcw, Boxes, Truck, Award, FileSignature, Brain, UserCheck, Heart, DollarSign, Briefcase, LogOut, Shield } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Users, Package, Warehouse, FileText, TrendingDown, TrendingUp, Settings, Menu, X, Store, Image as ImageIcon, Plus, Download, Moon, Sun, Bell, BarChart3, RotateCcw, Boxes, Truck, Award, FileSignature, Brain, UserCheck, Heart, DollarSign, Briefcase, LogOut, Shield, MessageSquare, Building2, LifeBuoy, CheckSquare, Activity, Share2, Zap } from 'lucide-react';
 import Toast from './components/Toast';
 import QuickActions from './components/QuickActions';
 import AuditLog from './components/AuditLog';
@@ -215,6 +222,13 @@ function App() {
     { id: 'advanced-analytics' as Page, label: 'Advanced Analytics', icon: Brain },
     { id: 'marketing-automation' as Page, label: 'Marketing Automation', icon: Briefcase },
     { id: 'financial-advanced' as Page, label: 'Financial Advanced', icon: DollarSign },
+    { id: 'communication' as Page, label: 'Communication Hub', icon: MessageSquare },
+    { id: 'multistore' as Page, label: 'Multi-Store & B2B', icon: Building2 },
+    { id: 'customer-portal' as Page, label: 'Customer Portal', icon: LifeBuoy },
+    { id: 'workflows' as Page, label: 'Advanced Workflows', icon: CheckSquare },
+    { id: 'realtime-analytics' as Page, label: 'Real-Time Analytics', icon: Activity },
+    { id: 'social-commerce' as Page, label: 'Social Commerce', icon: Share2 },
+    { id: 'advanced-commerce' as Page, label: 'Advanced Commerce', icon: Zap },
     { id: 'users' as Page, label: 'User Management', icon: Shield },
     { id: 'settings' as Page, label: 'Settings', icon: Settings },
   ];
@@ -247,6 +261,13 @@ function App() {
       case 'advanced-analytics': return <AdvancedAnalyticsPage orders={orders} customers={customers} products={products} settings={settings} />;
       case 'marketing-automation': return <MarketingAutomationPage settings={settings} customers={customers} />;
       case 'financial-advanced': return <FinancialAdvancedPage settings={settings} />;
+      case 'communication': return <CommunicationHubPage settings={settings} />;
+      case 'multistore': return <MultiStorePage settings={settings} />;
+      case 'customer-portal': return <CustomerPortalPage settings={settings} customers={customers} />;
+      case 'workflows': return <AdvancedWorkflowsPage settings={settings} />;
+      case 'realtime-analytics': return <RealTimeAnalyticsPage orders={orders} customers={customers} products={products} settings={settings} />;
+      case 'social-commerce': return <SocialCommercePage settings={settings} customers={customers} />;
+      case 'advanced-commerce': return <AdvancedCommercePage settings={settings} products={products} customers={customers} />;
       case 'users': return <UserManagementPage />;
       case 'settings': return <SettingsPage settings={settings} setSettings={setSettings} media={media} activityLog={activityLog} />;
       default: return <Dashboard orders={orders} customers={customers} products={products} expenses={expenses} income={income} settings={settings} />;
