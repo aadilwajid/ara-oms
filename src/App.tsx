@@ -30,10 +30,16 @@ import AdvancedWorkflowsPage from './pages/AdvancedWorkflowsPage';
 import RealTimeAnalyticsPage from './pages/RealTimeAnalyticsPage';
 import SocialCommercePage from './pages/SocialCommercePage';
 import AdvancedCommercePage from './pages/AdvancedCommercePage';
+import OrderTrackingPage from './pages/OrderTrackingPage';
+import TaxReportsPage from './pages/TaxReportsPage';
+import IntegrationSettingsPage from './pages/IntegrationSettingsPage';
+import ShippingZonesPage from './pages/ShippingZonesPage';
+import WarrantyManagementPage from './pages/WarrantyManagementPage';
+import POSPage from './pages/POSPage';
 import UserManagementPage from './pages/UserManagementPage';
 import SettingsPage from './pages/SettingsPage';
 import LoginPage from './pages/LoginPage';
-import { LayoutDashboard, ShoppingCart, Users, Package, Warehouse, FileText, TrendingDown, TrendingUp, Settings, Menu, X, Store, Image as ImageIcon, Plus, Download, Moon, Sun, Bell, BarChart3, RotateCcw, Boxes, Truck, Award, FileSignature, Brain, UserCheck, Heart, DollarSign, Briefcase, LogOut, Shield, MessageSquare, Building2, LifeBuoy, CheckSquare, Activity, Share2, Zap } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Users, Package, Warehouse, FileText, TrendingDown, TrendingUp, Settings, Menu, X, Store, Image as ImageIcon, Plus, Download, Moon, Sun, Bell, BarChart3, RotateCcw, Boxes, Truck, Award, FileSignature, Brain, UserCheck, Heart, DollarSign, Briefcase, LogOut, Shield, MessageSquare, Building2, LifeBuoy, CheckSquare, Activity, Share2, Zap, MapPin, Globe, ShieldCheck } from 'lucide-react';
 import Toast from './components/Toast';
 import QuickActions from './components/QuickActions';
 import AuditLog from './components/AuditLog';
@@ -229,6 +235,12 @@ function App() {
     { id: 'realtime-analytics' as Page, label: 'Real-Time Analytics', icon: Activity },
     { id: 'social-commerce' as Page, label: 'Social Commerce', icon: Share2 },
     { id: 'advanced-commerce' as Page, label: 'Advanced Commerce', icon: Zap },
+    { id: 'order-tracking' as Page, label: 'Order Tracking', icon: MapPin },
+    { id: 'tax-reports' as Page, label: 'Tax Reports', icon: FileText },
+    { id: 'integrations' as Page, label: 'Integrations', icon: Globe },
+    { id: 'shipping-zones' as Page, label: 'Shipping Zones', icon: Truck },
+    { id: 'warranties' as Page, label: 'Warranties', icon: ShieldCheck },
+    { id: 'pos' as Page, label: 'Point of Sale', icon: ShoppingCart },
     { id: 'users' as Page, label: 'User Management', icon: Shield },
     { id: 'settings' as Page, label: 'Settings', icon: Settings },
   ];
@@ -268,6 +280,12 @@ function App() {
       case 'realtime-analytics': return <RealTimeAnalyticsPage orders={orders} customers={customers} products={products} settings={settings} />;
       case 'social-commerce': return <SocialCommercePage settings={settings} customers={customers} />;
       case 'advanced-commerce': return <AdvancedCommercePage settings={settings} products={products} customers={customers} />;
+      case 'order-tracking': return <OrderTrackingPage orders={orders} settings={settings} />;
+      case 'tax-reports': return <TaxReportsPage orders={orders} expenses={expenses} income={income} settings={settings} />;
+      case 'integrations': return <IntegrationSettingsPage settings={settings} />;
+      case 'shipping-zones': return <ShippingZonesPage settings={settings} />;
+      case 'warranties': return <WarrantyManagementPage orders={orders} settings={settings} />;
+      case 'pos': return <POSPage products={products} customers={customers} orders={orders} setOrders={setOrders} settings={settings} showToast={showToast} />;
       case 'users': return <UserManagementPage />;
       case 'settings': return <SettingsPage settings={settings} setSettings={setSettings} media={media} activityLog={activityLog} />;
       default: return <Dashboard orders={orders} customers={customers} products={products} expenses={expenses} income={income} settings={settings} />;
