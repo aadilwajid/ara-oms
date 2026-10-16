@@ -59,6 +59,7 @@ export const ALL_PAGES = [
   'integrations',
   'shipping-zones',
   'warranties',
+  'pos',
   'users',
   'settings',
 ];

@@ -35,6 +35,7 @@ import TaxReportsPage from './pages/TaxReportsPage';
 import IntegrationSettingsPage from './pages/IntegrationSettingsPage';
 import ShippingZonesPage from './pages/ShippingZonesPage';
 import WarrantyManagementPage from './pages/WarrantyManagementPage';
+import POSPage from './pages/POSPage';
 import UserManagementPage from './pages/UserManagementPage';
 import SettingsPage from './pages/SettingsPage';
 import LoginPage from './pages/LoginPage';
@@ -239,6 +240,7 @@ function App() {
     { id: 'integrations' as Page, label: 'Integrations', icon: Globe },
     { id: 'shipping-zones' as Page, label: 'Shipping Zones', icon: Truck },
     { id: 'warranties' as Page, label: 'Warranties', icon: ShieldCheck },
+    { id: 'pos' as Page, label: 'Point of Sale', icon: ShoppingCart },
     { id: 'users' as Page, label: 'User Management', icon: Shield },
     { id: 'settings' as Page, label: 'Settings', icon: Settings },
   ];
@@ -283,6 +285,7 @@ function App() {
       case 'integrations': return <IntegrationSettingsPage settings={settings} />;
       case 'shipping-zones': return <ShippingZonesPage settings={settings} />;
       case 'warranties': return <WarrantyManagementPage orders={orders} settings={settings} />;
+      case 'pos': return <POSPage products={products} customers={customers} orders={orders} setOrders={setOrders} settings={settings} showToast={showToast} />;
       case 'users': return <UserManagementPage />;
       case 'settings': return <SettingsPage settings={settings} setSettings={setSettings} media={media} activityLog={activityLog} />;
       default: return <Dashboard orders={orders} customers={customers} products={products} expenses={expenses} income={income} settings={settings} />;
