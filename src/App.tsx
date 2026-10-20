@@ -1,7 +1,18 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Page, Product, Customer, Order, Invoice, Expense, Income, BusinessSettings, MediaItem, ActivityLog, ReturnRequest } from './types';
-import { loadFromStorage, saveToStorage, defaultSettings, defaultProducts, defaultCustomers, defaultOrders, defaultInvoices, defaultExpenses, defaultIncome, defaultMedia, defaultActivityLog } from './store';
-import { User, hasPageAccess, getRolePermissions, ROLE_PERMISSIONS } from './utils/permissions';
+// Remodeled App.tsx - Complete sidebar with all 34+ features
+
+import { useState } from 'react';
+import { AppProvider, useApp } from './backend/store';
+import { Page } from './types';
+import { 
+  LayoutDashboard, ShoppingCart, Users, Package, Warehouse, FileText, 
+  TrendingDown, TrendingUp, Settings, Menu, X, Store, Image as ImageIcon, 
+  Download, Moon, Sun, Bell, LogOut, ChevronDown, ChevronRight, Search,
+  BarChart3, RotateCcw, FileSignature, Truck, Award, Briefcase, DollarSign,
+  MessageSquare, Building2, LifeBuoy, CheckSquare, Activity, Share2, Zap,
+  Shield, MapPin, Globe, ShieldCheck, Brain, Heart, Boxes
+} from 'lucide-react';
+
+// Import all pages
 import Dashboard from './pages/Dashboard';
 import OrdersPage from './pages/OrdersPage';
 import CustomersPage from './pages/CustomersPage';
@@ -11,6 +22,7 @@ import InvoicesPage from './pages/InvoicesPage';
 import ExpensesPage from './pages/ExpensesPage';
 import IncomePage from './pages/IncomePage';
 import MediaPage from './pages/MediaPage';
+import SettingsPage from './pages/SettingsPage';
 import ReportsPage from './pages/ReportsPage';
 import ReturnsPage from './pages/ReturnsPage';
 import AdvancedInventoryPage from './pages/AdvancedInventoryPage';
@@ -35,286 +47,276 @@ import TaxReportsPage from './pages/TaxReportsPage';
 import IntegrationSettingsPage from './pages/IntegrationSettingsPage';
 import ShippingZonesPage from './pages/ShippingZonesPage';
 import WarrantyManagementPage from './pages/WarrantyManagementPage';
-import POSPage from './pages/POSPage';
 import UserManagementPage from './pages/UserManagementPage';
-import SettingsPage from './pages/SettingsPage';
 import LoginPage from './pages/LoginPage';
-import { LayoutDashboard, ShoppingCart, Users, Package, Warehouse, FileText, TrendingDown, TrendingUp, Settings, Menu, X, Store, Image as ImageIcon, Plus, Download, Moon, Sun, Bell, BarChart3, RotateCcw, Boxes, Truck, Award, FileSignature, Brain, UserCheck, Heart, DollarSign, Briefcase, LogOut, Shield, MessageSquare, Building2, LifeBuoy, CheckSquare, Activity, Share2, Zap, MapPin, Globe, ShieldCheck } from 'lucide-react';
-import Toast from './components/Toast';
-import QuickActions from './components/QuickActions';
-import AuditLog from './components/AuditLog';
-import GlobalSearch from './components/GlobalSearch';
 
-function App() {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+// Navigation structure with groups
+interface NavItem {
+  id: Page;
+  label: string;
+  icon: any;
+}
+
+interface NavGroup {
+  label: string;
+  icon: any;
+  items: NavItem[];
+}
+
+const NAVIGATION: NavGroup[] = [
+  {
+    label: 'Main',
+    icon: LayoutDashboard,
+    items: [
+      { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    ],
+  },
+  {
+    label: 'Sales & Orders',
+    icon: ShoppingCart,
+    items: [
+      { id: 'orders', label: 'Orders', icon: ShoppingCart },
+      { id: 'invoices', label: 'Invoices', icon: FileText },
+      { id: 'quotations', label: 'Quotations', icon: FileSignature },
+      { id: 'returns', label: 'Returns', icon: RotateCcw },
+      { id: 'order-tracking', label: 'Order Tracking', icon: MapPin },
+    ],
+  },
+  {
+    label: 'Products & Inventory',
+    icon: Package,
+    items: [
+      { id: 'products', label: 'Products', icon: Package },
+      { id: 'inventory', label: 'Inventory', icon: Warehouse },
+      { id: 'advanced-inventory', label: 'Advanced Inventory', icon: Boxes },
+      { id: 'media', label: 'Media Library', icon: ImageIcon },
+    ],
+  },
+  {
+    label: 'Customers & Marketing',
+    icon: Users,
+    items: [
+      { id: 'customers', label: 'Customers', icon: Users },
+      { id: 'customer-portal', label: 'Customer Portal', icon: LifeBuoy },
+      { id: 'customer-experience', label: 'Customer Experience', icon: Heart },
+      { id: 'marketing', label: 'Marketing & CRM', icon: Briefcase },
+      { id: 'promotions', label: 'Promotions', icon: Award },
+      { id: 'social-commerce', label: 'Social Commerce', icon: Share2 },
+      { id: 'marketing-automation', label: 'Marketing Automation', icon: Zap },
+    ],
+  },
+  {
+    label: 'Finance',
+    icon: DollarSign,
+    items: [
+      { id: 'expenses', label: 'Expenses', icon: TrendingDown },
+      { id: 'income', label: 'Income', icon: TrendingUp },
+      { id: 'financial-advanced', label: 'Financial Advanced', icon: DollarSign },
+      { id: 'tax-reports', label: 'Tax Reports', icon: FileText },
+    ],
+  },
+  {
+    label: 'Operations',
+    icon: Truck,
+    items: [
+      { id: 'suppliers', label: 'Suppliers & PO', icon: Truck },
+      { id: 'shipping-zones', label: 'Shipping Zones', icon: MapPin },
+      { id: 'warranties', label: 'Warranties', icon: ShieldCheck },
+    ],
+  },
+  {
+    label: 'Analytics & Reports',
+    icon: BarChart3,
+    items: [
+      { id: 'reports', label: 'Reports', icon: BarChart3 },
+      { id: 'advanced-analytics', label: 'Advanced Analytics', icon: Brain },
+      { id: 'realtime-analytics', label: 'Real-Time Analytics', icon: Activity },
+    ],
+  },
+  {
+    label: 'Team & Communication',
+    icon: MessageSquare,
+    items: [
+      { id: 'team', label: 'Team & HR', icon: Users },
+      { id: 'communication', label: 'Communication Hub', icon: MessageSquare },
+      { id: 'workflows', label: 'Advanced Workflows', icon: CheckSquare },
+    ],
+  },
+  {
+    label: 'Advanced Features',
+    icon: Zap,
+    items: [
+      { id: 'multistore', label: 'Multi-Store & B2B', icon: Building2 },
+      { id: 'advanced-commerce', label: 'Advanced Commerce', icon: Zap },
+    ],
+  },
+  {
+    label: 'Settings & Admin',
+    icon: Settings,
+    items: [
+      { id: 'settings', label: 'Settings', icon: Settings },
+      { id: 'integrations', label: 'Integrations', icon: Globe },
+      { id: 'users', label: 'User Management', icon: Shield },
+    ],
+  },
+];
+
+// Main App Content Component
+function AppContent() {
+  const { state, dispatch, logout } = useApp();
   const [currentPage, setCurrentPage] = useState<Page>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [income, setIncome] = useState<Income[]>([]);
-  const [media, setMedia] = useState<MediaItem[]>([]);
-  const [activityLog, setActivityLog] = useState<ActivityLog[]>([]);
-  const [returns, setReturns] = useState<ReturnRequest[]>([]);
-  const [settings, setSettings] = useState<BusinessSettings>(defaultSettings);
-  const [toasts, setToasts] = useState<Array<{ id: string; message: string; type: 'success' | 'error' | 'info' }>>([]);
-  const [showNotifications, setShowNotifications] = useState(false);
-
-  useEffect(() => {
-    // Load user session
-    const savedUser = localStorage.getItem('oms_current_user');
-    if (savedUser) {
-      setCurrentUser(JSON.parse(savedUser));
-    }
-
-    setProducts(loadFromStorage('oms_products', defaultProducts));
-    setCustomers(loadFromStorage('oms_customers', defaultCustomers));
-    setOrders(loadFromStorage('oms_orders', defaultOrders));
-    setInvoices(loadFromStorage('oms_invoices', defaultInvoices));
-    setExpenses(loadFromStorage('oms_expenses', defaultExpenses));
-    setIncome(loadFromStorage('oms_income', defaultIncome));
-    setMedia(loadFromStorage('oms_media', defaultMedia));
-    setActivityLog(loadFromStorage('oms_activity_log', defaultActivityLog));
-    setReturns(loadFromStorage('oms_returns', []));
-    setSettings(loadFromStorage('oms_settings', defaultSettings));
-    setDarkMode(loadFromStorage('oms_dark_mode', false));
-  }, []);
-
-  useEffect(() => { saveToStorage('oms_products', products); }, [products]);
-  useEffect(() => { saveToStorage('oms_customers', customers); }, [customers]);
-  useEffect(() => { saveToStorage('oms_orders', orders); }, [orders]);
-  useEffect(() => { saveToStorage('oms_invoices', invoices); }, [invoices]);
-  useEffect(() => { saveToStorage('oms_expenses', expenses); }, [expenses]);
-  useEffect(() => { saveToStorage('oms_income', income); }, [income]);
-  useEffect(() => { saveToStorage('oms_media', media); }, [media]);
-  useEffect(() => { saveToStorage('oms_returns', returns); }, [returns]);
-  useEffect(() => { saveToStorage('oms_activity_log', activityLog); }, [activityLog]);
-  useEffect(() => { saveToStorage('oms_settings', settings); }, [settings]);
-  
-  // Dark mode effect - apply to document element
-  useEffect(() => {
-    saveToStorage('oms_dark_mode', darkMode);
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [darkMode]);
-
-  // Toast notification system
-  const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'success') => {
-    const id = Date.now().toString();
-    setToasts(prev => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id));
-    }, 3000);
-  }, []);
-
-  // Activity logging
-  const logActivity = useCallback((action: string, details: string) => {
-    const newLog: ActivityLog = {
-      id: Date.now().toString(),
-      action,
-      details,
-      timestamp: new Date().toISOString(),
-      user: settings.ownerName || 'Admin',
-    };
-    setActivityLog(prev => [newLog, ...prev].slice(0, 100)); // Keep last 100 entries
-  }, [settings.ownerName]);
-
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.ctrlKey || e.metaKey) {
-        switch (e.key) {
-          case 'n':
-            e.preventDefault();
-            if (currentPage === 'orders') {
-              // Trigger new order modal (handled by OrdersPage)
-              window.dispatchEvent(new CustomEvent('oms:newOrder'));
-            }
-            break;
-          case 'k':
-            e.preventDefault();
-            // Focus search
-            const searchInput = document.querySelector('input[placeholder*="Search"]') as HTMLInputElement;
-            searchInput?.focus();
-            break;
-          case 'd':
-            e.preventDefault();
-            setDarkMode(prev => !prev);
-            showToast(`${!darkMode ? 'Dark' : 'Light'} mode enabled`, 'info');
-            break;
-        }
-      }
-    };
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [currentPage, darkMode, showToast]);
-
-  // Export data
-  const exportData = (format: 'json' | 'csv') => {
-    const data = {
-      products,
-      customers,
-      orders,
-      invoices,
-      expenses,
-      income,
-      settings,
-      exportDate: new Date().toISOString(),
-    };
-
-    let content: string;
-    let mimeType: string;
-    let extension: string;
-
-    if (format === 'json') {
-      content = JSON.stringify(data, null, 2);
-      mimeType = 'application/json';
-      extension = 'json';
-    } else {
-      // CSV export - combine all data
-      const rows = [
-        ['Type', 'ID', 'Name/Number', 'Amount', 'Date', 'Status'],
-        ...products.map(p => ['Product', p.id, p.name, p.price.toString(), p.createdAt, '']),
-        ...customers.map(c => ['Customer', c.id, c.name, c.totalSpent.toString(), c.createdAt, '']),
-        ...orders.map(o => ['Order', o.id, o.orderNumber, o.total.toString(), o.createdAt, o.status]),
-      ];
-      content = rows.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
-      mimeType = 'text/csv';
-      extension = 'csv';
-    }
-
-    const blob = new Blob([content], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `store-backup-${new Date().toISOString().split('T')[0]}.${extension}`;
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast(`Data exported as ${format.toUpperCase()}`, 'success');
-    logActivity('Data Export', `Exported all data as ${format.toUpperCase()}`);
-  };
-
-  // Notifications
-  const pendingOrders = orders.filter(o => o.status === 'pending' || o.status === 'processing').length;
-  const lowStockProducts = products.filter(p => p.stock <= p.lowStockThreshold).length;
-  const overdueInvoices = invoices.filter(i => i.status === 'sent' && new Date(i.dueDate) < new Date()).length;
-  const hasNotifications = pendingOrders > 0 || lowStockProducts > 0 || overdueInvoices > 0;
-
-  const allNavItems = [
-    { id: 'dashboard' as Page, label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'orders' as Page, label: 'Orders', icon: ShoppingCart },
-    { id: 'customers' as Page, label: 'Customers', icon: Users },
-    { id: 'products' as Page, label: 'Products', icon: Package },
-    { id: 'inventory' as Page, label: 'Inventory', icon: Warehouse },
-    { id: 'advanced-inventory' as Page, label: 'Advanced Inventory', icon: Boxes },
-    { id: 'suppliers' as Page, label: 'Suppliers & PO', icon: Truck },
-    { id: 'promotions' as Page, label: 'Promotions', icon: Award },
-    { id: 'marketing' as Page, label: 'Marketing & CRM', icon: Users },
-    { id: 'media' as Page, label: 'Media', icon: ImageIcon },
-    { id: 'invoices' as Page, label: 'Invoices', icon: FileText },
-    { id: 'quotations' as Page, label: 'Quotations', icon: FileSignature },
-    { id: 'reports' as Page, label: 'Reports', icon: BarChart3 },
-    { id: 'returns' as Page, label: 'Returns', icon: RotateCcw },
-    { id: 'expenses' as Page, label: 'Expenses', icon: TrendingDown },
-    { id: 'income' as Page, label: 'Income', icon: TrendingUp },
-    { id: 'team' as Page, label: 'Team & HR', icon: UserCheck },
-    { id: 'customer-experience' as Page, label: 'Customer Experience', icon: Heart },
-    { id: 'advanced-analytics' as Page, label: 'Advanced Analytics', icon: Brain },
-    { id: 'marketing-automation' as Page, label: 'Marketing Automation', icon: Briefcase },
-    { id: 'financial-advanced' as Page, label: 'Financial Advanced', icon: DollarSign },
-    { id: 'communication' as Page, label: 'Communication Hub', icon: MessageSquare },
-    { id: 'multistore' as Page, label: 'Multi-Store & B2B', icon: Building2 },
-    { id: 'customer-portal' as Page, label: 'Customer Portal', icon: LifeBuoy },
-    { id: 'workflows' as Page, label: 'Advanced Workflows', icon: CheckSquare },
-    { id: 'realtime-analytics' as Page, label: 'Real-Time Analytics', icon: Activity },
-    { id: 'social-commerce' as Page, label: 'Social Commerce', icon: Share2 },
-    { id: 'advanced-commerce' as Page, label: 'Advanced Commerce', icon: Zap },
-    { id: 'order-tracking' as Page, label: 'Order Tracking', icon: MapPin },
-    { id: 'tax-reports' as Page, label: 'Tax Reports', icon: FileText },
-    { id: 'integrations' as Page, label: 'Integrations', icon: Globe },
-    { id: 'shipping-zones' as Page, label: 'Shipping Zones', icon: Truck },
-    { id: 'warranties' as Page, label: 'Warranties', icon: ShieldCheck },
-    { id: 'pos' as Page, label: 'Point of Sale', icon: ShoppingCart },
-    { id: 'users' as Page, label: 'User Management', icon: Shield },
-    { id: 'settings' as Page, label: 'Settings', icon: Settings },
-  ];
-
-  // Filter navigation items based on user role
-  const navItems = currentUser
-    ? allNavItems.filter(item => hasPageAccess(currentUser.role, item.id))
-    : [];
-
-  const renderPage = () => {
-    switch (currentPage) {
-      case 'dashboard': return <Dashboard orders={orders} customers={customers} products={products} expenses={expenses} income={income} settings={settings} />;
-      case 'orders': return <OrdersPage orders={orders} setOrders={setOrders} customers={customers} products={products} settings={settings} media={media} showToast={showToast} logActivity={logActivity} />;
-      case 'customers': return <CustomersPage customers={customers} setCustomers={setCustomers} settings={settings} />;
-      case 'products': return <ProductsPage products={products} setProducts={setProducts} media={media} />;
-      case 'inventory': return <InventoryPage products={products} setProducts={setProducts} settings={settings} />;
-      case 'advanced-inventory': return <AdvancedInventoryPage products={products} setProducts={setProducts} settings={settings} />;
-      case 'suppliers': return <SuppliersPage settings={settings} />;
-      case 'promotions': return <PromotionsPage settings={settings} />;
-      case 'marketing': return <MarketingPage settings={settings} />;
-      case 'invoices': return <InvoicesPage invoices={invoices} setInvoices={setInvoices} orders={orders} customers={customers} settings={settings} />;
-      case 'quotations': return <QuotationsPage products={products} customers={customers} settings={settings} />;
-      case 'expenses': return <ExpensesPage expenses={expenses} setExpenses={setExpenses} />;
-      case 'income': return <IncomePage income={income} setIncome={setIncome} />;
-      case 'media': return <MediaPage media={media} setMedia={setMedia} />;
-      case 'reports': return <ReportsPage orders={orders} customers={customers} products={products} expenses={expenses} income={income} settings={settings} />;
-      case 'returns': return <ReturnsPage returns={returns} setReturns={setReturns} orders={orders} customers={customers} settings={settings} />;
-      case 'team': return <TeamManagementPage settings={settings} />;
-      case 'customer-experience': return <CustomerExperiencePage customers={customers} products={products} orders={orders} settings={settings} />;
-      case 'advanced-analytics': return <AdvancedAnalyticsPage orders={orders} customers={customers} products={products} settings={settings} />;
-      case 'marketing-automation': return <MarketingAutomationPage settings={settings} customers={customers} />;
-      case 'financial-advanced': return <FinancialAdvancedPage settings={settings} />;
-      case 'communication': return <CommunicationHubPage settings={settings} />;
-      case 'multistore': return <MultiStorePage settings={settings} />;
-      case 'customer-portal': return <CustomerPortalPage settings={settings} customers={customers} />;
-      case 'workflows': return <AdvancedWorkflowsPage settings={settings} />;
-      case 'realtime-analytics': return <RealTimeAnalyticsPage orders={orders} customers={customers} products={products} settings={settings} />;
-      case 'social-commerce': return <SocialCommercePage settings={settings} customers={customers} />;
-      case 'advanced-commerce': return <AdvancedCommercePage settings={settings} products={products} customers={customers} />;
-      case 'order-tracking': return <OrderTrackingPage orders={orders} settings={settings} />;
-      case 'tax-reports': return <TaxReportsPage orders={orders} expenses={expenses} income={income} settings={settings} />;
-      case 'integrations': return <IntegrationSettingsPage settings={settings} />;
-      case 'shipping-zones': return <ShippingZonesPage settings={settings} />;
-      case 'warranties': return <WarrantyManagementPage orders={orders} settings={settings} />;
-      case 'pos': return <POSPage products={products} customers={customers} orders={orders} setOrders={setOrders} settings={settings} showToast={showToast} />;
-      case 'users': return <UserManagementPage />;
-      case 'settings': return <SettingsPage settings={settings} setSettings={setSettings} media={media} activityLog={activityLog} />;
-      default: return <Dashboard orders={orders} customers={customers} products={products} expenses={expenses} income={income} settings={settings} />;
-    }
-  };
-
-  // Handle login
-  const handleLogin = (user: User) => {
-    setCurrentUser(user);
-    localStorage.setItem('oms_current_user', JSON.stringify(user));
-    logActivity('User Login', `${user.name} logged in as ${user.role}`);
-  };
-
-  // Handle logout
-  const handleLogout = () => {
-    if (currentUser) {
-      logActivity('User Logout', `${currentUser.name} logged out`);
-    }
-    setCurrentUser(null);
-    localStorage.removeItem('oms_current_user');
-  };
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['Main', 'Sales & Orders']));
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Show login page if not authenticated
-  if (!currentUser) {
-    return <LoginPage onLogin={handleLogin} />;
+  if (!state.isAuthenticated) {
+    return <LoginPage />;
   }
 
-  // Get current user role permissions
-  const rolePermissions = getRolePermissions(currentUser.role);
+  // Toggle group expansion
+  const toggleGroup = (groupLabel: string) => {
+    const newExpanded = new Set(expandedGroups);
+    if (newExpanded.has(groupLabel)) {
+      newExpanded.delete(groupLabel);
+    } else {
+      newExpanded.add(groupLabel);
+    }
+    setExpandedGroups(newExpanded);
+  };
+
+  // Filter navigation items based on search
+  const filteredNavigation = searchQuery
+    ? NAVIGATION.map(group => ({
+        ...group,
+        items: group.items.filter(item => 
+          item.label.toLowerCase().includes(searchQuery.toLowerCase())
+        ),
+      })).filter(group => group.items.length > 0)
+    : NAVIGATION;
+
+  // Wrapper setters for backward compatibility
+  const setProducts = (products: any) => dispatch({ type: 'SET_PRODUCTS', payload: products });
+  const setCustomers = (customers: any) => dispatch({ type: 'SET_CUSTOMERS', payload: customers });
+  const setOrders = (orders: any) => dispatch({ type: 'SET_ORDERS', payload: orders });
+  const setInvoices = (invoices: any) => dispatch({ type: 'SET_INVOICES', payload: invoices });
+  const setExpenses = (expenses: any) => dispatch({ type: 'SET_EXPENSES', payload: expenses });
+  const setIncome = (income: any) => dispatch({ type: 'SET_INCOME', payload: income });
+  const setMedia = (media: any) => dispatch({ type: 'SET_MEDIA', payload: media });
+  const setSettings = (settings: any) => dispatch({ type: 'SET_SETTINGS', payload: settings });
+
+  // Render current page - All 34+ pages wired
+  const renderPage = () => {
+    const { products, customers, orders, invoices, expenses, income, media, settings } = state;
+
+    switch (currentPage) {
+      // Main
+      case 'dashboard':
+        return <Dashboard orders={orders} customers={customers} products={products} expenses={expenses} income={income} settings={settings} />;
+      
+      // Sales & Orders
+      case 'orders':
+        return <OrdersPage orders={orders} setOrders={setOrders} customers={customers} products={products} settings={settings} media={media} />;
+      case 'invoices':
+        return <InvoicesPage invoices={invoices} setInvoices={setInvoices} orders={orders} customers={customers} settings={settings} />;
+      case 'quotations':
+        return <QuotationsPage products={products} customers={customers} settings={settings} />;
+      case 'returns':
+        return <ReturnsPage orders={orders} customers={customers} settings={settings} returns={[]} setReturns={() => {}} />;
+      case 'order-tracking':
+        return <OrderTrackingPage orders={orders} settings={settings} />;
+      
+      // Products & Inventory
+      case 'products':
+        return <ProductsPage products={products} setProducts={setProducts} media={media} />;
+      case 'inventory':
+        return <InventoryPage products={products} setProducts={setProducts} settings={settings} />;
+      case 'advanced-inventory':
+        return <AdvancedInventoryPage products={products} setProducts={setProducts} settings={settings} />;
+      case 'media':
+        return <MediaPage media={media} setMedia={setMedia} />;
+      
+      // Customers & Marketing
+      case 'customers':
+        return <CustomersPage customers={customers} setCustomers={setCustomers} settings={settings} />;
+      case 'customer-portal':
+        return <CustomerPortalPage settings={settings} customers={customers} />;
+      case 'customer-experience':
+        return <CustomerExperiencePage customers={customers} products={products} orders={orders} settings={settings} />;
+      case 'marketing':
+        return <MarketingPage settings={settings} />;
+      case 'promotions':
+        return <PromotionsPage settings={settings} />;
+      case 'social-commerce':
+        return <SocialCommercePage settings={settings} customers={customers} />;
+      case 'marketing-automation':
+        return <MarketingAutomationPage settings={settings} customers={customers} />;
+      
+      // Finance
+      case 'expenses':
+        return <ExpensesPage expenses={expenses} setExpenses={setExpenses} />;
+      case 'income':
+        return <IncomePage income={income} setIncome={setIncome} />;
+      case 'financial-advanced':
+        return <FinancialAdvancedPage settings={settings} />;
+      case 'tax-reports':
+        return <TaxReportsPage orders={orders} expenses={expenses} income={income} settings={settings} />;
+      
+      // Operations
+      case 'suppliers':
+        return <SuppliersPage settings={settings} />;
+      case 'shipping-zones':
+        return <ShippingZonesPage settings={settings} />;
+      case 'warranties':
+        return <WarrantyManagementPage orders={orders} settings={settings} />;
+      
+      // Analytics & Reports
+      case 'reports':
+        return <ReportsPage orders={orders} customers={customers} products={products} expenses={expenses} income={income} settings={settings} />;
+      case 'advanced-analytics':
+        return <AdvancedAnalyticsPage orders={orders} customers={customers} products={products} settings={settings} />;
+      case 'realtime-analytics':
+        return <RealTimeAnalyticsPage orders={orders} customers={customers} products={products} settings={settings} />;
+      
+      // Team & Communication
+      case 'team':
+        return <TeamManagementPage settings={settings} />;
+      case 'communication':
+        return <CommunicationHubPage settings={settings} />;
+      case 'workflows':
+        return <AdvancedWorkflowsPage settings={settings} />;
+      
+      // Advanced Features
+      case 'multistore':
+        return <MultiStorePage settings={settings} />;
+      case 'advanced-commerce':
+        return <AdvancedCommercePage settings={settings} products={products} customers={customers} />;
+      
+      // Settings & Admin
+      case 'settings':
+        return <SettingsPage settings={settings} setSettings={setSettings} media={media} />;
+      case 'integrations':
+        return <IntegrationSettingsPage settings={settings} />;
+      case 'users':
+        return <UserManagementPage />;
+      
+      default:
+        return <Dashboard orders={orders} customers={customers} products={products} expenses={expenses} income={income} settings={settings} />;
+    }
+  };
+
+  // Loading state
+  if (state.loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading StoreOS...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`flex h-screen bg-gray-50 overflow-hidden ${darkMode ? 'dark' : ''}`}>
@@ -325,187 +327,162 @@ function App() {
 
       {/* Sidebar */}
       <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-64 text-white transform transition-transform duration-200 flex flex-col ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`} style={{background: 'linear-gradient(to bottom, #065f46, #064e3b)'}}>
+        {/* Logo */}
         <div className="flex items-center gap-3 px-4 py-3 border-b" style={{borderColor: '#047857'}}>
-          {settings.logo ? (
-            <img src={settings.logo} alt="Logo" className="rounded w-8 h-8 object-cover" />
+          {state.settings.logo ? (
+            <img src={state.settings.logo} alt="Logo" className="rounded w-8 h-8 object-cover" />
           ) : (
             <Store className="w-8 h-8" style={{color: '#6ee7b7'}} />
           )}
           <div className="flex-1 min-w-0">
-            <h1 className="text-lg font-bold truncate mb-0">{settings.storeName}</h1>
+            <h1 className="text-lg font-bold truncate mb-0">{state.settings.storeName}</h1>
             <p className="text-xs mb-0" style={{color: '#6ee7b7'}}>Order Management</p>
           </div>
           <button className="lg:hidden text-white p-0 bg-transparent border-0" onClick={() => setSidebarOpen(false)}>
             <X className="w-5 h-5" />
           </button>
         </div>
-        <nav className="mt-3 px-2 flex-1 overflow-auto">
-          {navItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => { setCurrentPage(item.id); setSidebarOpen(false); }}
-              className={`flex items-center gap-2 w-full px-3 py-2 rounded mb-1 text-left text-sm transition-colors border-0 ${
-                currentPage === item.id
-                  ? 'text-white font-medium'
-                  : 'text-emerald-200 hover:bg-white/10 hover:text-white'
-              }`}
-              style={{
-                backgroundColor: currentPage === item.id ? '#047857' : 'transparent',
-                color: currentPage === item.id ? '#fff' : '#a7f3d0'
-              }}
-            >
-              <item.icon className="w-5 h-5 shrink-0" />
-              <span>{item.label}</span>
-              {item.id === 'media' && media.length > 0 && (
-                <span className="ml-auto px-2 py-0.5 rounded-full text-white" style={{backgroundColor: '#059669', fontSize: '0.7rem'}}>{media.length}</span>
-              )}
-            </button>
-          ))}
-        </nav>
-        <div className="p-2 border-t" style={{borderColor: '#047857'}}>
-          <div className="flex gap-1">
-            <button onClick={() => exportData('json')} className="flex-1 flex items-center justify-center gap-1 px-2 py-2 rounded text-emerald-200 hover:bg-white/10 hover:text-white text-xs transition-colors bg-transparent border-0" title="Export as JSON">
-              <Download className="w-4 h-4" />
-              <span>JSON</span>
-            </button>
-            <button onClick={() => exportData('csv')} className="flex-1 flex items-center justify-center gap-1 px-2 py-2 rounded text-emerald-200 hover:bg-white/10 hover:text-white text-xs transition-colors bg-transparent border-0" title="Export as CSV">
-              <Download className="w-4 h-4" />
-              <span>CSV</span>
-            </button>
+
+        {/* Search */}
+        <div className="px-3 py-2 border-b" style={{borderColor: '#047857'}}>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-300" />
+            <input
+              type="text"
+              placeholder="Search features..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 bg-white/10 border border-white/20 rounded-lg text-sm text-white placeholder-emerald-300 focus:outline-none focus:border-white/40"
+            />
           </div>
         </div>
+
+        {/* Navigation with Collapsible Groups */}
+        <nav className="mt-2 px-2 flex-1 overflow-auto">
+          {filteredNavigation.map((group) => {
+            const isExpanded = expandedGroups.has(group.label);
+            const GroupIcon = group.icon;
+            
+            return (
+              <div key={group.label} className="mb-2">
+                {/* Group Header */}
+                <button
+                  onClick={() => toggleGroup(group.label)}
+                  className="flex items-center gap-2 w-full px-3 py-2 rounded text-left text-xs font-semibold uppercase tracking-wider text-emerald-300 hover:bg-white/5 hover:text-white transition-colors border-0 bg-transparent"
+                >
+                  <GroupIcon className="w-4 h-4 shrink-0" />
+                  <span className="flex-1">{group.label}</span>
+                  {isExpanded ? (
+                    <ChevronDown className="w-4 h-4" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4" />
+                  )}
+                </button>
+
+                {/* Group Items */}
+                {isExpanded && (
+                  <div className="mt-1 space-y-0.5">
+                    {group.items.map((item) => {
+                      const ItemIcon = item.icon;
+                      const isActive = currentPage === item.id;
+                      
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => { setCurrentPage(item.id); setSidebarOpen(false); }}
+                          className={`flex items-center gap-2 w-full px-3 py-2 pl-9 rounded text-left text-sm transition-colors border-0 ${
+                            isActive
+                              ? 'text-white font-medium'
+                              : 'text-emerald-200 hover:bg-white/10 hover:text-white'
+                          }`}
+                          style={{
+                            backgroundColor: isActive ? '#047857' : 'transparent',
+                            color: isActive ? '#fff' : '#a7f3d0'
+                          }}
+                        >
+                          <ItemIcon className="w-4 h-4 shrink-0" />
+                          <span>{item.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </nav>
+
+        {/* User Info */}
+        {state.user && (
+          <div className="p-3 border-t" style={{borderColor: '#047857'}}>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-white font-bold">
+                {state.user.name[0]}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{state.user.name}</p>
+                <p className="text-xs text-emerald-300 truncate">{state.user.role}</p>
+              </div>
+            </div>
+            <button
+              onClick={logout}
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded text-emerald-200 hover:bg-white/10 hover:text-white text-sm transition-colors bg-transparent border-0"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Logout</span>
+            </button>
+          </div>
+        )}
       </aside>
 
       {/* Main Content */}
       <main className="flex-1 overflow-auto">
+        {/* Header */}
         <header className="bg-white border-b px-3 lg:px-4 py-3 flex items-center gap-3 sticky top-0 z-30">
           <button className="lg:hidden p-0 bg-transparent border-0" onClick={() => setSidebarOpen(true)}>
             <Menu className="w-6 h-6 text-gray-600" />
           </button>
           <h2 className="text-xl font-semibold text-gray-800 capitalize mb-0">{currentPage}</h2>
           <div className="ml-auto flex items-center gap-2">
-            {/* Notifications */}
-            <div className="relative">
-              <button onClick={() => setShowNotifications(!showNotifications)} className="relative p-2 hover:bg-gray-100 rounded bg-transparent border-0">
-                <Bell className="w-5 h-5 text-gray-600" />
-                {hasNotifications && (
-                  <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full" />
-                )}
-              </button>
-              {showNotifications && (
-                <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border z-50">
-                  <div className="p-4 border-b">
-                    <h3 className="font-semibold text-gray-800">Notifications</h3>
-                  </div>
-                  <div className="max-h-96 overflow-auto">
-                    {pendingOrders > 0 && (
-                      <div className="p-4 border-b hover:bg-gray-50 cursor-pointer" onClick={() => { setCurrentPage('orders'); setShowNotifications(false); }}>
-                        <div className="flex items-start gap-3">
-                          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-                            <ShoppingCart className="w-4 h-4 text-blue-600" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-800">{pendingOrders} Pending Orders</p>
-                            <p className="text-xs text-gray-500 mt-0.5">Orders need processing</p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    {lowStockProducts > 0 && (
-                      <div className="p-4 border-b hover:bg-gray-50 cursor-pointer" onClick={() => { setCurrentPage('inventory'); setShowNotifications(false); }}>
-                        <div className="flex items-start gap-3">
-                          <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
-                            <Package className="w-4 h-4 text-amber-600" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-800">{lowStockProducts} Low Stock Items</p>
-                            <p className="text-xs text-gray-500 mt-0.5">Products need restocking</p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    {overdueInvoices > 0 && (
-                      <div className="p-4 border-b hover:bg-gray-50 cursor-pointer" onClick={() => { setCurrentPage('invoices'); setShowNotifications(false); }}>
-                        <div className="flex items-start gap-3">
-                          <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center shrink-0">
-                            <FileText className="w-4 h-4 text-red-600" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-800">{overdueInvoices} Overdue Invoices</p>
-                            <p className="text-xs text-gray-500 mt-0.5">Invoices past due date</p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    {!hasNotifications && (
-                      <div className="p-8 text-center text-gray-400">
-                        <Bell className="w-12 h-12 mx-auto mb-2 opacity-30" />
-                        <p className="text-sm">No notifications</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Dark Mode Toggle */}
-            <button onClick={() => { setDarkMode(!darkMode); showToast(`${!darkMode ? 'Dark' : 'Light'} mode enabled`, 'info'); }} className="p-2 hover:bg-gray-100 rounded-lg">
+            <button onClick={() => setDarkMode(!darkMode)} className="p-2 hover:bg-gray-100 rounded-lg bg-transparent border-0">
               {darkMode ? <Sun className="w-5 h-5 text-gray-600" /> : <Moon className="w-5 h-5 text-gray-600" />}
             </button>
-
-            <span className="text-sm text-gray-500 hidden sm:inline">{settings.currency}</span>
-            
-            {/* User Profile & Logout */}
-            <div className="flex items-center gap-2">
-              <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg">
-                <div
-                  className="w-7 h-7 rounded-full flex items-center justify-center text-sm"
-                  style={{ backgroundColor: `${rolePermissions.color}20` }}
-                >
-                  {rolePermissions.icon}
-                </div>
-                <div className="text-left">
-                  <p className="text-xs font-medium text-gray-800">{currentUser.name}</p>
-                  <p className="text-xs text-gray-500" style={{ color: rolePermissions.color }}>{rolePermissions.label}</p>
-                </div>
-              </div>
-              <button
-                onClick={handleLogout}
-                className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 hover:text-red-600 transition-colors"
-                title="Logout"
-              >
-                <LogOut className="w-5 h-5" />
-              </button>
-            </div>
+            <span className="text-sm text-gray-500 hidden sm:inline">{state.settings.currency}</span>
           </div>
         </header>
+
+        {/* Page Content */}
         <div className="p-4 lg:p-6">
           {renderPage()}
         </div>
       </main>
 
-      {/* Floating Action Button - Fixed Bottom Right */}
-      <div className="fixed bottom-6 right-6 z-40">
-        <QuickActions
-          onNewOrder={() => { setCurrentPage('orders'); window.dispatchEvent(new CustomEvent('oms:newOrder')); }}
-          onNewProduct={() => { setCurrentPage('products'); window.dispatchEvent(new CustomEvent('oms:newProduct')); }}
-          onNewCustomer={() => { setCurrentPage('customers'); window.dispatchEvent(new CustomEvent('oms:newCustomer')); }}
-        />
-      </div>
-
-      {/* Global Search */}
-      <GlobalSearch
-        orders={orders}
-        customers={customers}
-        products={products}
-        invoices={invoices}
-        onNavigate={(page) => setCurrentPage(page as Page)}
-      />
-
-      {/* Toast Notifications */}
-      <Toast toasts={toasts} />
+      {/* Notifications */}
+      {state.notifications.length > 0 && (
+        <div className="fixed bottom-4 right-4 z-50 space-y-2">
+          {state.notifications.map(notification => (
+            <div
+              key={notification.id}
+              className={`px-4 py-3 rounded-lg shadow-lg animate-slide-in ${
+                notification.type === 'success' ? 'bg-green-500 text-white' :
+                notification.type === 'error' ? 'bg-red-500 text-white' :
+                'bg-blue-500 text-white'
+              }`}
+            >
+              {notification.message}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
-export default App;
+// Root App Component with Provider
+export default function App() {
+  return (
+    <AppProvider>
+      <AppContent />
+    </AppProvider>
+  );
+}
